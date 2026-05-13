@@ -14,6 +14,13 @@
 # pre-v1.0.1 setup invoked PowerShell with -WindowStyle Hidden, which hid
 # the update messages. Detect that case and relaunch ourselves visible.
 #
+# Detection: inspect our own process's command line via CIM/WMI for an
+# explicit "-WindowStyle Hidden" argument. The previous approach (testing
+# Process.MainWindowHandle for IntPtr.Zero) fired spuriously during the
+# first ~100ms of a visible PowerShell process's lifetime, before the .NET
+# Process object had a chance to populate the window handle -- causing an
+# unnecessary self-promote (visible flicker) even when launched visibly.
+#
 # Two safety guards against an infinite self-promote loop:
 #  1. THEO_LAUNCHER_PROMOTED env var is set before spawning the child; child
 #     inherits it and skips this block.
@@ -21,8 +28,18 @@
 #     CreateProcess command-line concatenation.
 
 if (-not $env:THEO_LAUNCHER_PROMOTED) {
-    $proc = Get-Process -Id $PID -ErrorAction SilentlyContinue
-    if ($proc -and $proc.MainWindowHandle -eq [IntPtr]::Zero) {
+    $myCmdLine = $null
+    try {
+        $myCmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID" -ErrorAction Stop).CommandLine
+    } catch {
+        # CIM unavailable; fall back to the old MainWindowHandle proxy.
+        $proc = Get-Process -Id $PID -ErrorAction SilentlyContinue
+        if ($proc -and $proc.MainWindowHandle -eq [IntPtr]::Zero) {
+            $myCmdLine = '-WindowStyle Hidden'  # treat as hidden
+        }
+    }
+
+    if ($myCmdLine -and ($myCmdLine -match '(?i)-w(indowstyle)?\s+["'']?hidden["'']?')) {
         $env:THEO_LAUNCHER_PROMOTED = '1'
         Start-Process powershell.exe -ArgumentList @(
             '-NoProfile'

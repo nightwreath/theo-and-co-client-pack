@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.4 — 2026-05-12
+
+Self-promote no longer triggers a spurious flicker on visible launches.
+
+**Bug:** The v1.0.1-v1.0.3 self-promote check used `Process.MainWindowHandle == IntPtr.Zero` as a proxy for "PowerShell was started hidden". But on a freshly-started visible PowerShell process, `MainWindowHandle` stays at `IntPtr.Zero` for the first ~50-100ms while the .NET `Process` object catches up to the Win32 window creation — so the self-promote check fired during that window, even though we were already visible. Result: a brief flash of the parent process before the (correctly-visible) child appeared.
+
+**Fix:** Inspect our own process's command line via `Get-CimInstance Win32_Process` and look for a literal `-WindowStyle Hidden` argument. That's the definitive test for "was I launched hidden" — no race condition, no false positives. Falls back to the old `MainWindowHandle` proxy if CIM is unavailable (defensive only; CIM should work on all supported Windows versions).
+
+The regex accepts variations: `-WindowStyle Hidden`, `-w hidden`, `-W "Hidden"`, etc. — anything PowerShell itself would accept.
+
 ## v1.0.3 — 2026-05-12
 
 Bug-fix release. Three issues caught by the first auto-update tests on Alex's install.
