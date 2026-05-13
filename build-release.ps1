@@ -36,6 +36,18 @@ $ManagedFiles = @(
         install_path = 'Theo and Co/First_Time_Setup.bat'
         source       = Join-Path $RepoRoot 'First_Time_Setup.bat'
     }
+    @{
+        # Compiled Zeal-RoF2 DLL. Miles Sound System auto-loads any *.asi in
+        # the EQ root directory at sound init, so the install_path is the EQ
+        # root (sibling of mssmp3.asi / mssvoice.asi), NOT the "Theo and Co"
+        # launcher subfolder. Built externally from
+        # https://github.com/nightwreath/Zeal-RoF2 and dropped into this repo
+        # dir before running build-release; gitignored so the ~10MB binary
+        # doesn't bloat the client-pack git history.
+        name         = 'Zeal.asi'
+        install_path = 'Zeal.asi'
+        source       = Join-Path $RepoRoot 'Zeal.asi'
+    }
 )
 
 # Compute hashes

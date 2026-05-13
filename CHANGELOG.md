@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.1.0 — 2026-05-13
+
+**First Zeal-RoF2 ship — H/V mouse-look parity.**
+
+`Zeal.asi` is now part of the managed file set. The launcher auto-pulls it on next launch and Miles Sound System auto-loads it when EQ starts. No friend action required.
+
+**What it does:** patches a single FMUL instruction inside `eqgame.exe`'s per-frame mouse handler at startup. The vanilla client multiplies horizontal mouse delta by `* 512.0` and vertical by `* 256.0` — a hardcoded 2:1 disparity that's the real source of "vertical mouse feels slower than horizontal." `Zeal.asi` redirects the vertical-axis FMUL to read its multiplier from a `512.0` constant inside `Zeal.asi`'s own `.rdata` instead, eliminating the disparity. Single 4-byte runtime write per process, signature-gated against the FMUL opcode bytes — if the binary doesn't match the expected RoF2 build, the patch silently no-ops and the game runs as vanilla.
+
+**What still works the same:** the in-game `MouseSensitivity` slider (Options → Display) continues to scale both axes proportionally. The 8-bucket internal range (UI display `0, 14, 28, 42, 57, 71, 85, 100` per Session 11's Ghidra findings) is unchanged. The Path A frame-rate cap (`MaxFPS=60` + `MaxMouseLookFPS=60`, shipped v1.0.0+) still mitigates the frame-rate-amplified portion of the disparity on top of the constant-ratio fix. Both fixes layer.
+
+**What didn't make this release:** the originally-planned "smooth float per-axis" approach (which would have disabled the slider) was dropped — the slider-disable had no concrete player benefit, only an implementation side-effect of the planned constant-pool patches. Per-axis trim values (`MouseSensitivityXTrim` / `MouseSensitivityYTrim` floats on top of the slider) are reserved for a future v1.x if anyone asks; the universal H/V parity benefit in v1.1.0 is enough on its own.
+
+**First-time AV interaction (heads-up for friends):** unsigned `.asi` files in the EQ folder structurally resemble DLL injection — most antivirus heuristics block them silently on first load (no popup, no quarantine notification, EQ just runs vanilla). If the mouse still feels disparate after the auto-pull, check the AV's quarantine/events log for `Zeal.asi` and add an exclusion for the EQ install folder. Bitdefender's location: Protection → Antivirus → Settings → Manage Exceptions → + Add → folder path → check both On-access scanning AND Advanced Threat Defense. Other AVs vary.
+
+**Built from:** [nightwreath/Zeal-RoF2 `3a12c7a`](https://github.com/nightwreath/Zeal-RoF2/commit/3a12c7a) — first feature port on top of the Layer 0 injection scaffolding from Session 10. The Zeal-RoF2 fork preserves CoastalRedwood/Zeal's MIT license; our additions are the same.
+
 ## v1.0.8 — 2026-05-12
 
 `$LockedSettings` now appends missing keys instead of silently no-op'ing on them.

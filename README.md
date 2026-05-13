@@ -7,9 +7,11 @@ Auto-update channel for client-side files used on the **Theo and Co** private EQ
 A versioned bundle of client-side files that friends' launchers pull on every EQ launch. Each release tag (`v1.0`, `v1.1`, ...) ships:
 
 - `Launch_EQ.ps1` — the launcher itself, with auto-updater logic + `$LockedSettings` for ini stability
+- `Play_EQ.bat`, `_Setup_Helper.ps1`, `First_Time_Setup.bat` — supporting launcher scripts (`Theo and Co/` subfolder)
+- `Zeal.asi` (since v1.1.0) — compiled [Zeal-RoF2](https://github.com/nightwreath/Zeal-RoF2) DLL; Miles Sound System auto-loads any `.asi` in the EQ root and applies the bundled patches at startup. Currently: H/V mouse-look parity. Future patches (3rd-person camera, FOV, mouse smoothing) layer in here.
 - `manifest.json` — declares each managed file's install path + SHA256 hash
 
-Future asset classes (Zeal-RoF2 `.asi`, UI mods, map overlays) plug into the same bundle without additional infrastructure.
+Future asset classes (UI mods, map overlays) plug into the same bundle without additional infrastructure.
 
 ## How friends get updates
 
