@@ -125,6 +125,21 @@ function Resolve-PendingUpdates {
     }
 }
 
+function Get-JsonFromUrl {
+    param([string]$Uri, [hashtable]$Headers = @{})
+    # Defensive JSON fetch: download as raw bytes, strip a UTF-8 BOM if present,
+    # then ConvertFrom-Json explicitly. Works around Invoke-RestMethod's silent
+    # parse failure when the body starts with EF BB BF (UTF-8 BOM). That bug
+    # is what made every auto-update between v1.0.1 and v1.0.4 a no-op.
+    $resp = Invoke-WebRequest -Uri $Uri -Headers $Headers -UseBasicParsing -TimeoutSec 8 -ErrorAction Stop
+    $bytes = if ($resp.Content -is [byte[]]) { $resp.Content } else { [System.Text.Encoding]::UTF8.GetBytes($resp.Content) }
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        $bytes = $bytes[3..($bytes.Length - 1)]
+    }
+    $text = [System.Text.Encoding]::UTF8.GetString($bytes)
+    return $text | ConvertFrom-Json
+}
+
 function Update-ClientPack {
     $localTag = Get-LocalTag
 
@@ -132,7 +147,7 @@ function Update-ClientPack {
         $apiUrl = "https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest"
         Write-Host "[Launcher] Checking for client-pack updates..."
         $headers = @{ 'User-Agent' = 'theo-and-co-launcher'; 'Accept' = 'application/vnd.github+json' }
-        $release = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec 8 -ErrorAction Stop
+        $release = Get-JsonFromUrl -Uri $apiUrl -Headers $headers
 
         $remoteTag = $release.tag_name
 
@@ -152,7 +167,18 @@ function Update-ClientPack {
             return
         }
 
-        $manifest = Invoke-RestMethod -Uri $manifestAsset.browser_download_url -TimeoutSec 8 -ErrorAction Stop
+        $manifest = Get-JsonFromUrl -Uri $manifestAsset.browser_download_url
+
+        # Sanity check: if the manifest doesn't look like a manifest (no .files
+        # array, or empty), refuse to advance the version stamp. This is the
+        # check that would have caught v1.0.1-v1.0.4's BOM bug: those updates
+        # reported "Update OK" with 0 files iterated, lying about success.
+        $fileList = @($manifest.files)
+        if (-not $manifest.tag -or $fileList.Count -eq 0) {
+            Write-UpdaterLog "Update FAILED: manifest is malformed or empty (tag='$($manifest.tag)', files=$($fileList.Count))."
+            Write-Host "[Launcher] Update skipped (manifest is malformed). Continuing with current files." -ForegroundColor Yellow
+            return
+        }
 
         $allOk        = $true
         $downloaded   = 0
@@ -279,6 +305,31 @@ Update-ClientPack
 Wait-ForKeyPress
 
 Write-Host "[Launcher] Launching EverQuest..."
+
+# Hide our own console window before EQ takes over. The PowerShell process
+# keeps running in the background (waiting for EQ to exit, then re-stamping
+# eqclient.ini) but the visible window goes away -- matches how every other
+# normal Windows game launcher behaves. If anything fails in the re-stamp
+# step, theo_and_co_updater.log catches it for postmortem.
+try {
+    if (-not ('Native.TheoConsole' -as [type])) {
+        Add-Type -MemberDefinition @'
+[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+public static extern System.IntPtr GetConsoleWindow();
+[System.Runtime.InteropServices.DllImport("user32.dll")]
+public static extern bool ShowWindow(System.IntPtr hWnd, int nCmdShow);
+'@ -Name 'TheoConsole' -Namespace 'Native' -ErrorAction Stop | Out-Null
+    }
+    $hwnd = [Native.TheoConsole]::GetConsoleWindow()
+    if ($hwnd -ne [IntPtr]::Zero) {
+        [Native.TheoConsole]::ShowWindow($hwnd, 0) | Out-Null   # SW_HIDE = 0
+    }
+} catch {
+    # Console-hide is cosmetic; if it fails (AV blocks Add-Type, etc.), just
+    # leave the window visible and continue.
+    Write-UpdaterLog "Console-hide skipped: $($_.Exception.Message)"
+}
+
 Start-Process -FilePath (Join-Path $EQRoot 'eqgame.exe') `
               -ArgumentList 'patchme' `
               -WorkingDirectory $EQRoot `

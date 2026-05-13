@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.0.5 — 2026-05-12
+
+Two real bugs caught, both critical.
+
+**THE BIG ONE — manifest BOM made every auto-update a silent no-op since v1.0.1.**
+
+PowerShell 5.1's `Set-Content -Encoding UTF8` writes a UTF-8 BOM (`EF BB BF`) at the start of the file. `Invoke-RestMethod` in PS 5.1 **cannot parse JSON that starts with a BOM** — it silently fails and returns the raw response as a *string* instead of the parsed object. The launcher's `foreach ($entry in $manifest.files)` then iterated zero times (a string has no `.files` property), no files were ever downloaded or hash-verified, but `$allOk` stayed true so the version stamp advanced anyway. The integrity check inside the same loop also ran zero times — couldn't catch the lie.
+
+Three fixes, layered:
+
+1. **`build-release.ps1`** now writes `manifest.json` as UTF-8 **without** BOM via `[System.IO.File]::WriteAllText` + `UTF8Encoding($false)`. Root cause squashed at the source.
+2. **Launcher: defensive BOM stripping** via new `Get-JsonFromUrl` function. Downloads JSON as raw bytes, strips a leading `EF BB BF` if present, then `ConvertFrom-Json`. Belt and suspenders in case anyone writes a manifest with a BOM later.
+3. **Launcher: manifest sanity check**. After parsing, verify `$manifest.tag` is non-empty AND `$manifest.files` has at least one entry. If either is missing, the update is skipped and the version stamp is NOT advanced. This is the assertion that would have caught v1.0.1-v1.0.4's silent no-ops three releases ago.
+
+**Console window now hides during gameplay.**
+
+The visible PowerShell window correctly showed the update flow at launcher start, but then stuck around for the entire EQ session because `Start-Process -Wait` keeps the launcher alive for the post-exit `eqclient.ini` re-stamp. Matches no other Windows game launcher. Fixed by hiding the console (Win32 `ShowWindow(hwnd, SW_HIDE)` via `Add-Type` P/Invoke) immediately before launching `eqgame.exe`. The PowerShell process keeps running in the background, waits for EQ to exit, does the silent re-stamp, then exits cleanly. No more visible launcher window during gameplay. Wrapped in try/catch so a failed `Add-Type` (e.g., AV intervention) falls through gracefully — console stays visible rather than blocking launch.
+
 ## v1.0.4 — 2026-05-12
 
 Self-promote no longer triggers a spurious flicker on visible launches.

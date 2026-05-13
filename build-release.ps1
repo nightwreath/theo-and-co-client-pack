@@ -59,9 +59,17 @@ $manifest = [ordered]@{
 }
 
 $manifestPath = Join-Path $RepoRoot 'manifest.json'
-$manifest | ConvertTo-Json -Depth 5 | Set-Content -Path $manifestPath -Encoding UTF8 -NoNewline
+
+# IMPORTANT: write UTF-8 WITHOUT BOM. PowerShell 5.1's `Set-Content -Encoding
+# UTF8` writes a BOM, which Invoke-RestMethod's JSON parser silently fails on
+# (returns the raw response as a string instead of a parsed object). That bug
+# made every "auto-update" between v1.0.1 and v1.0.4 a silent no-op.
+$json = $manifest | ConvertTo-Json -Depth 5
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($manifestPath, $json, $utf8NoBom)
+
 Write-Host ""
-Write-Host "Wrote $manifestPath"
+Write-Host "Wrote $manifestPath (UTF-8, no BOM)"
 Write-Host ""
 Write-Host "Next steps to publish:"
 Write-Host ""
