@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.7 — 2026-05-12
+
+Two small polish fixes.
+
+**`MouseTurnZoom` removed from `$LockedSettings`.** The key has an in-game UI toggle (Options → Mouse), so locking it to a fixed value forces a personal preference on friends with no in-game way to opt out. Removed for the same reason `MouseSensitivity` was removed in v1.0 — friend-owned preferences shouldn't be re-stamped from outside the game. Remaining locked settings (`MaxFPS=60`, `MaxMouseLookFPS=60`) are the Path A frame-rate cap pair for the H/V mouse-look disparity fix; neither has an in-game UI, both live in ini only.
+
+**Progress-bar color flicker suppressed.** `$ProgressPreference = 'SilentlyContinue'` set at the top of the script. PowerShell 5.1's `Invoke-WebRequest` (and other web cmdlets) paint a colored ASCII progress bar across the terminal during downloads — visible for ~50ms each, which looked like a glitch flickering in and out during the update check. Suppressing the progress bar removes the visual artifact; downloads still happen, they just no longer paint over the terminal.
+
 ## v1.0.6 — 2026-05-12
 
 Console window now actually closes when the game launches.

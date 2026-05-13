@@ -9,6 +9,11 @@
 # Edit the $LockedSettings hashtable below to add or remove settings to keep
 # stable across EQ sessions.
 
+# Suppress Invoke-WebRequest's progress bar -- otherwise every download paints
+# a colored ASCII progress bar across the terminal that flickers in and out
+# in 50ms, which looks like a glitch even though the download is fine.
+$ProgressPreference = 'SilentlyContinue'
+
 # --- Self-promote to visible window ------------------------------------------
 # Older Play_EQ.bat versions (pre-v1.0.1) and desktop shortcuts created by
 # pre-v1.0.1 setup invoked PowerShell with -WindowStyle Hidden, which hid
@@ -59,18 +64,25 @@ $IniPath     = Join-Path $EQRoot 'eqclient.ini'
 $VersionFile = Join-Path $PSScriptRoot 'theo_and_co.version'
 $UpdaterLog  = Join-Path $PSScriptRoot 'theo_and_co_updater.log'
 
-# Settings enforced after each EQ exit. The key must already exist in
-# eqclient.ini under whatever section. To turn off all locking, empty
-# the hashtable: $LockedSettings = @{}
+# Settings re-stamped into eqclient.ini before every EQ launch. The key
+# must already exist in eqclient.ini under whatever section. To turn off
+# all locking, empty the hashtable: $LockedSettings = @{}
 #
-# Note on MouseSensitivity: deliberately NOT locked. EQ persists the
-# slider's position to eqclient.ini between sessions on its own, and
-# the value is personal preference (8 discrete buckets, 0.5x-2.0x
-# multiplier range). The old "lock to 100" inherited from Session 1
-# was a no-op anyway -- the client clamps the loaded value to [1, 8]
-# in loadOptions, so 100 became 8 on every launch silently.
+# What's locked (and why):
+#   MaxFPS=60 + MaxMouseLookFPS=60  -- pairs that cap the frame-rate, the
+#     fix for EQ's intrinsic 2:1 horizontal/vertical mouse-look disparity
+#     at high FPS (Project 1999 community fix). Neither has an in-game UI;
+#     they only exist via ini edits, and EQ can silently drop unfamiliar
+#     keys on exit -- the lock is the belt-and-suspenders that survives
+#     ini-rewrites, manual edits, future-version drift, etc.
+#
+# What's deliberately NOT locked:
+#   MouseSensitivity -- EQ persists the slider's position between sessions
+#     on its own; personal preference (8 discrete buckets, 0.5x-2.0x
+#     multiplier range per the Session 11 Ghidra findings).
+#   MouseTurnZoom -- has its own in-game UI toggle (Options -> Mouse),
+#     personal preference, no reason to force a value on the friend.
 $LockedSettings = @{
-    'MouseTurnZoom'   = '0'
     'MaxFPS'          = '60'
     'MaxMouseLookFPS' = '60'
 }
