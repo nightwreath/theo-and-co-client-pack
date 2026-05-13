@@ -1,0 +1,4 @@
+# Keep all files as-is on disk so the file-on-disk hash matches what
+# gets uploaded to release assets. PowerShell, JSON, and Markdown all
+# tolerate LF on Windows.
+* -text
