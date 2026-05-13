@@ -22,16 +22,16 @@ $UpdaterLog  = Join-Path $PSScriptRoot 'theo_and_co_updater.log'
 # eqclient.ini under whatever section. To turn off all locking, empty
 # the hashtable: $LockedSettings = @{}
 #
-# Note on MouseSensitivity: the in-game slider has 8 buckets internally
-# (displayed as 0/14/28/42/57/71/85/100 = buckets 1-8). Locking to '4'
-# is the middle bucket (slider displays as 42) and matches the game's
-# own default. Friends can adjust mid-session; the value resets to 4
-# on each relaunch.
+# Note on MouseSensitivity: deliberately NOT locked. EQ persists the
+# slider's position to eqclient.ini between sessions on its own, and
+# the value is personal preference (8 discrete buckets, 0.5x-2.0x
+# multiplier range). The old "lock to 100" inherited from Session 1
+# was a no-op anyway -- the client clamps the loaded value to [1, 8]
+# in loadOptions, so 100 became 8 on every launch silently.
 $LockedSettings = @{
-    'MouseSensitivity' = '4'
-    'MouseTurnZoom'    = '0'
-    'MaxFPS'           = '60'
-    'MaxMouseLookFPS'  = '60'
+    'MouseTurnZoom'   = '0'
+    'MaxFPS'          = '60'
+    'MaxMouseLookFPS' = '60'
 }
 
 # --- Updater ------------------------------------------------------------------
