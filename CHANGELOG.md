@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.0.1 — 2026-05-12
+
+UX pass on the update flow. Friends now see what the launcher did on every launch, including the boring "already up to date" case.
+
+**Launcher (`Launch_EQ.ps1`):**
+
+- **Visible console output.** "Up to date at vX.Y" on no-op runs (green); "Update available: vX.Y → vA.B. Applying…" on real updates (cyan); clear error messaging on failures (yellow/red).
+- **"Press any key to launch the game" prompt** before every EQ start, so friends can read the update output. Falls through automatically in non-interactive hosts.
+- **Self-promote to visible window.** If PowerShell was started with `-WindowStyle Hidden` (older `Play_EQ.bat` versions or pre-v1.0.1 desktop shortcuts), the launcher detects that, relaunches itself visible, and exits the hidden process. Existing friends keep working without re-running setup.
+- **Heartbeat log line on every launch.** `theo_and_co_updater.log` now gets a line per launch (`Check OK: up to date at vX.Y` / `Update OK: ...` / `Update FAILED: ...`), so we can debug from screenshots without needing a "did it run" check.
+- Renamed launch message "Launching EQ..." → "Launching EverQuest..." (cosmetic).
+
+**`Play_EQ.bat`** (now manifest-managed; was previously unmanaged in v1.0):
+
+- Removed `-WindowStyle Hidden` from the PowerShell invocation so updater output is visible from the start. (The self-promote path in the launcher handles existing friends until they pick up this new bat file.)
+
+**Build (`build-release.ps1`):**
+
+- `Play_EQ.bat` added to `$ManagedFiles`.
+
 ## v1.0 — 2026-05-12
 
 Initial release. Bootstraps the auto-update channel for the Theo and Co private EQEmu server.

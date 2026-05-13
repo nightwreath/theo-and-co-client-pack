@@ -21,6 +21,11 @@ $ManagedFiles = @(
         install_path = 'Theo and Co/Launch_EQ.ps1'
         source       = Join-Path $RepoRoot 'Launch_EQ.ps1'
     }
+    @{
+        name         = 'Play_EQ.bat'
+        install_path = 'Theo and Co/Play_EQ.bat'
+        source       = Join-Path $RepoRoot 'Play_EQ.bat'
+    }
 )
 
 # Compute hashes
