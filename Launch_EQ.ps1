@@ -13,15 +13,24 @@
 # Older Play_EQ.bat versions (pre-v1.0.1) and desktop shortcuts created by
 # pre-v1.0.1 setup invoked PowerShell with -WindowStyle Hidden, which hid
 # the update messages. Detect that case and relaunch ourselves visible.
+#
+# Two safety guards against an infinite self-promote loop:
+#  1. THEO_LAUNCHER_PROMOTED env var is set before spawning the child; child
+#     inherits it and skips this block.
+#  2. $PSCommandPath is explicitly quoted so paths with spaces survive the
+#     CreateProcess command-line concatenation.
 
-$proc = Get-Process -Id $PID -ErrorAction SilentlyContinue
-if ($proc -and $proc.MainWindowHandle -eq [IntPtr]::Zero) {
-    Start-Process powershell.exe -ArgumentList @(
-        '-NoProfile'
-        '-ExecutionPolicy', 'Bypass'
-        '-File', $PSCommandPath
-    ) -WindowStyle Normal
-    exit
+if (-not $env:THEO_LAUNCHER_PROMOTED) {
+    $proc = Get-Process -Id $PID -ErrorAction SilentlyContinue
+    if ($proc -and $proc.MainWindowHandle -eq [IntPtr]::Zero) {
+        $env:THEO_LAUNCHER_PROMOTED = '1'
+        Start-Process powershell.exe -ArgumentList @(
+            '-NoProfile'
+            '-ExecutionPolicy', 'Bypass'
+            '-File', ('"{0}"' -f $PSCommandPath)
+        ) -WindowStyle Normal
+        exit
+    }
 }
 
 # --- Configuration ------------------------------------------------------------
@@ -72,6 +81,31 @@ function Test-PathInsideRoot {
         $rootAbs = $rootAbs + [System.IO.Path]::DirectorySeparatorChar
     }
     return $pathAbs.StartsWith($rootAbs, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+function Resolve-PendingUpdates {
+    # Apply any .new files left behind by a previous launch where Move-Item
+    # couldn't replace the target file (most commonly because the launcher
+    # was busy replacing itself). At this point the previous PowerShell
+    # process has long since exited, so the file is no longer locked.
+    $candidates = @()
+    foreach ($dir in @($PSScriptRoot, $EQRoot)) {
+        if (Test-Path $dir) {
+            $candidates += Get-ChildItem -LiteralPath $dir -Filter '*.new' -ErrorAction SilentlyContinue
+        }
+    }
+
+    foreach ($pending in $candidates) {
+        $targetPath = $pending.FullName.Substring(0, $pending.FullName.Length - 4)  # strip ".new"
+        try {
+            Move-Item -LiteralPath $pending.FullName -Destination $targetPath -Force -ErrorAction Stop
+            Write-Host "[Launcher] Applied pending update: $($pending.Name -replace '\.new$','')" -ForegroundColor Cyan
+            Write-UpdaterLog "Applied pending update: $($pending.Name)"
+        } catch {
+            Write-Host "[Launcher]   Could not apply pending $($pending.Name): $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-UpdaterLog "Pending apply FAILED: $($pending.Name): $($_.Exception.Message)"
+        }
+    }
 }
 
 function Update-ClientPack {
@@ -154,9 +188,39 @@ function Update-ClientPack {
                 New-Item -Path $parent -ItemType Directory -Force | Out-Null
             }
 
-            Move-Item -Path $tmpPath -Destination $installPath -Force
-            Write-UpdaterLog "Updated $($entry.name) -> $remoteTag"
-            $downloaded++
+            try {
+                Move-Item -LiteralPath $tmpPath -Destination $installPath -Force -ErrorAction Stop
+                Write-UpdaterLog "Updated $($entry.name) -> $remoteTag"
+                $downloaded++
+            } catch {
+                Write-Host "[Launcher]   Replace failed on $($entry.name); $($_.Exception.Message). Will retry next launch." -ForegroundColor Yellow
+                Write-UpdaterLog "Update DEFERRED: $($entry.name) replace failed: $($_.Exception.Message). .new file kept for next-launch apply."
+                $allOk = $false
+                # Keep $tmpPath ($installPath.new) in place; Resolve-PendingUpdates will catch it next launch.
+            }
+        }
+
+        # Defense-in-depth: re-verify every managed file's hash against the
+        # manifest. Catches a Move-Item that "succeeded" but didn't actually
+        # replace the file (e.g., AV reverted, or a silent share-mode issue).
+        # If any file is wrong, treat the update as a failure -- the version
+        # stamp stays at the previous value and the launcher retries next run.
+        $verifyFailed = @()
+        foreach ($entry in $manifest.files) {
+            $installPath = Join-Path $EQRoot $entry.install_path
+            if (Test-Path $installPath) {
+                $h = (Get-FileHash -LiteralPath $installPath -Algorithm SHA256).Hash.ToLower()
+                if ($h -ne $entry.sha256.ToLower()) {
+                    $verifyFailed += $entry.name
+                }
+            } else {
+                $verifyFailed += "$($entry.name) (missing)"
+            }
+        }
+        if ($verifyFailed.Count -gt 0) {
+            Write-Host "[Launcher] Integrity check FAILED for: $($verifyFailed -join ', '). Will retry next launch." -ForegroundColor Red
+            Write-UpdaterLog "Integrity FAILED: $($verifyFailed -join ', '). Version stamp held at $displayLocal."
+            $allOk = $false
         }
 
         if ($allOk) {
@@ -193,6 +257,7 @@ function Wait-ForKeyPress {
 
 # --- Run ----------------------------------------------------------------------
 
+Resolve-PendingUpdates
 Update-ClientPack
 Wait-ForKeyPress
 

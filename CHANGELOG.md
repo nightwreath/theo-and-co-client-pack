@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.3 — 2026-05-12
+
+Bug-fix release. Three issues caught by the first auto-update tests on Alex's install.
+
+**Launcher (`Launch_EQ.ps1`):**
+
+- **Fix: self-promote path quoting** (v1.0.2 regression). When `$PSCommandPath` contained spaces (`Theo and Co\Launch_EQ.ps1`), the `Start-Process powershell.exe -ArgumentList @(...)` array-join produced an unquoted path on the child's command line — the child PowerShell parsed only up to the first space and failed to find the script. Two PowerShell windows would flash and vanish, EQ wouldn't launch. Now wraps `$PSCommandPath` in explicit quotes.
+- **Fix: self-promote infinite-loop guard.** Set `THEO_LAUNCHER_PROMOTED=1` env var before spawning the visible child; child inherits it and skips the self-promote check. Prevents recursion if the new visible PowerShell hasn't fully materialized its window handle by the time it runs the check.
+- **Fix: silent `Move-Item` failure.** `Move-Item` without `-ErrorAction Stop` raises a non-terminating error on failure, but the code didn't check `$?`, so a failed replacement (most commonly: the running launcher trying to replace itself with a file the OS still has a lock on) would proceed as if successful — the version stamp advanced even though the file didn't update. Now: `-ErrorAction Stop` + per-file try/catch; on failure the `.new` is **kept on disk** and `$allOk` is marked false. The new `Resolve-PendingUpdates` function at launcher start picks up leftover `.new` files on the next launch (when the file is no longer locked) and applies them.
+- **New: post-update integrity verification.** After the download loop, re-hash every managed file and compare against the manifest. Any mismatch fails the update (version stamp held at old value) regardless of whether `Move-Item` reported success. Defense-in-depth against the silent-failure scenario above and against externally-modified files (AV revert, manual edit).
+- **New: `Resolve-PendingUpdates`** — checked at script start, before the network update check. Applies any `*.new` files left in the EQ root or `Theo and Co\` subfolder by a previous run.
+
 ## v1.0.2 — 2026-05-12
 
 Setup-helper visibility fix + extends the managed-files set to cover the full launcher experience.
