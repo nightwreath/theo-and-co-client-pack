@@ -324,11 +324,37 @@ Wait-ForKeyPress
 # launching the game. Closes the visible terminal window the moment EQ
 # takes over, matching every other normal Windows game launcher.
 if (Test-Path $IniPath) {
+    # When a locked key already exists in eqclient.ini, replace its value.
+    # When it doesn't exist (e.g., a friend's pre-v1.0.8 ini that predates
+    # the MaxMouseLookFPS addition), insert it after a related anchor key
+    # so it lands in the same INI section -- EQ's loadOptions reads keys
+    # via section-scoped lookups, so just appending at EOF isn't reliable.
+    $anchorMap = @{
+        'MaxMouseLookFPS' = 'MaxFPS'   # both live in [Defaults] in EQ's ini
+    }
     $content = Get-Content -Raw $IniPath
     foreach ($key in $LockedSettings.Keys) {
         $value   = $LockedSettings[$key]
         $pattern = "(?m)^$([regex]::Escape($key))=.*$"
-        $content = [regex]::Replace($content, $pattern, "$key=$value")
+        if ($content -match $pattern) {
+            $content = [regex]::Replace($content, $pattern, "$key=$value")
+            continue
+        }
+        # Missing -- try to insert after the mapped anchor key
+        $inserted = $false
+        $anchor = $anchorMap[$key]
+        if ($anchor) {
+            $anchorPattern = "(?m)(^$([regex]::Escape($anchor))=.*)$"
+            if ($content -match $anchorPattern) {
+                $content = [regex]::Replace($content, $anchorPattern, "`$1`r`n$key=$value", 1)
+                $inserted = $true
+            }
+        }
+        # No anchor or anchor not in file -- last resort, append at EOF
+        if (-not $inserted) {
+            if (-not $content.EndsWith("`n")) { $content += "`r`n" }
+            $content += "$key=$value`r`n"
+        }
     }
     Set-Content -Path $IniPath -Value $content -NoNewline
 }

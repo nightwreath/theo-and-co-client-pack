@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.8 — 2026-05-12
+
+`$LockedSettings` now appends missing keys instead of silently no-op'ing on them.
+
+**Bug:** Up through v1.0.7, the locked-settings re-stamp used `[regex]::Replace` to overwrite existing key values in eqclient.ini. If a key didn't already exist in the ini, the regex didn't match anything and the key was silently skipped — no error, no fallback. This bit us when surveying friends' install state: any friend whose eqclient.ini predates Session 8 (which added `MaxMouseLookFPS=60`) doesn't have the key at all, so the launcher's `MaxMouseLookFPS=60` lock would silently fail to apply.
+
+**Fix:** when a locked key is missing, the launcher now **inserts it** rather than skipping. To ensure the inserted key lands in the correct INI section (EQ's `loadOptions` reads keys via section-scoped lookups — appending at EOF isn't reliable), v1.0.8 uses an anchor-key map: missing keys are inserted immediately after a related "anchor" key that's known to exist. Currently mapped: `MaxMouseLookFPS` → after `MaxFPS` (both belong to EQ's `[Defaults]` section). Falls back to EOF append if the anchor itself isn't present.
+
+End result: a friend with a Session-1-era eqclient.ini who drops in v1.0.8's `Launch_EQ.ps1` once will, on first launch, have `MaxMouseLookFPS=60` automatically inserted next to `MaxFPS`, and both keys locked. No manual ini edit required from the friend.
+
 ## v1.0.7 — 2026-05-12
 
 Two small polish fixes.
