@@ -304,38 +304,13 @@ Resolve-PendingUpdates
 Update-ClientPack
 Wait-ForKeyPress
 
-Write-Host "[Launcher] Launching EverQuest..."
-
-# Hide our own console window before EQ takes over. The PowerShell process
-# keeps running in the background (waiting for EQ to exit, then re-stamping
-# eqclient.ini) but the visible window goes away -- matches how every other
-# normal Windows game launcher behaves. If anything fails in the re-stamp
-# step, theo_and_co_updater.log catches it for postmortem.
-try {
-    if (-not ('Native.TheoConsole' -as [type])) {
-        Add-Type -MemberDefinition @'
-[System.Runtime.InteropServices.DllImport("kernel32.dll")]
-public static extern System.IntPtr GetConsoleWindow();
-[System.Runtime.InteropServices.DllImport("user32.dll")]
-public static extern bool ShowWindow(System.IntPtr hWnd, int nCmdShow);
-'@ -Name 'TheoConsole' -Namespace 'Native' -ErrorAction Stop | Out-Null
-    }
-    $hwnd = [Native.TheoConsole]::GetConsoleWindow()
-    if ($hwnd -ne [IntPtr]::Zero) {
-        [Native.TheoConsole]::ShowWindow($hwnd, 0) | Out-Null   # SW_HIDE = 0
-    }
-} catch {
-    # Console-hide is cosmetic; if it fails (AV blocks Add-Type, etc.), just
-    # leave the window visible and continue.
-    Write-UpdaterLog "Console-hide skipped: $($_.Exception.Message)"
-}
-
-Start-Process -FilePath (Join-Path $EQRoot 'eqgame.exe') `
-              -ArgumentList 'patchme' `
-              -WorkingDirectory $EQRoot `
-              -Wait
-
-# After EQ exits, restore locked settings.
+# Apply $LockedSettings to eqclient.ini BEFORE launching EQ. The pre-v1.0.6
+# launcher applied these after EQ exited, which required the launcher to
+# stay alive (and its console window visible) for the entire EQ session.
+# Applying at launch time achieves the same end state -- locked keys stay
+# locked across sessions -- while letting PowerShell exit immediately after
+# launching the game. Closes the visible terminal window the moment EQ
+# takes over, matching every other normal Windows game launcher.
 if (Test-Path $IniPath) {
     $content = Get-Content -Raw $IniPath
     foreach ($key in $LockedSettings.Keys) {
@@ -345,3 +320,12 @@ if (Test-Path $IniPath) {
     }
     Set-Content -Path $IniPath -Value $content -NoNewline
 }
+
+Write-Host "[Launcher] Launching EverQuest..."
+Start-Process -FilePath (Join-Path $EQRoot 'eqgame.exe') `
+              -ArgumentList 'patchme' `
+              -WorkingDirectory $EQRoot
+
+# PowerShell exits now. The visible terminal window closes. EQ continues
+# running independently. On next launch, $LockedSettings will be applied
+# again -- catching any drift from the previous session.

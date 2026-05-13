@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.6 — 2026-05-12
+
+Console window now actually closes when the game launches.
+
+**Bug:** v1.0.5's `Add-Type` + Win32 `ShowWindow(SW_HIDE)` console-hide approach works in classic Windows console (`conhost.exe`) but not in **Windows Terminal**, which is the default host on Windows 11. In WT, the visible window belongs to the Terminal process, not the PowerShell process — `ShowWindow` on PowerShell's pseudo-console handle has no visible effect. Result: the launcher window stayed open for the entire EQ session.
+
+**Fix:** redesigned the post-exit `eqclient.ini` re-stamp so the launcher doesn't need to stay alive at all. The locked-settings application now happens *before* launching EQ rather than *after exit*. Same end state (locked keys stay locked across sessions; any drift gets caught on the next launch), much simpler. PowerShell launches EQ and exits immediately — visible terminal closes, EQ runs independently. Works in conhost, Windows Terminal, and any other PowerShell host.
+
+Side effect: removed the `Add-Type` P/Invoke block entirely. One less AV-heuristic-flaggable pattern in the launcher script.
+
 ## v1.0.5 — 2026-05-12
 
 Two real bugs caught, both critical.
