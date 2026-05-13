@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.2 — 2026-05-12
+
+Setup-helper visibility fix + extends the managed-files set to cover the full launcher experience.
+
+**`_Setup_Helper.ps1`** (now manifest-managed; was previously unmanaged):
+
+- Removed `-WindowStyle Hidden` from the desktop-shortcut arguments. Shortcuts created by `First_Time_Setup.bat` from now on open a visible PowerShell window so friends see the update output. (Existing friends who already ran setup keep working via v1.0.1's self-promote.)
+
+**`First_Time_Setup.bat`** (now manifest-managed; was previously unmanaged):
+
+- No content changes; added to the manifest so future tweaks to first-time setup propagate automatically.
+
+**Build (`build-release.ps1`):**
+
+- `_Setup_Helper.ps1` and `First_Time_Setup.bat` added to `$ManagedFiles`. Total managed files now 4.
+
 ## v1.0.1 — 2026-05-12
 
 UX pass on the update flow. Friends now see what the launcher did on every launch, including the boring "already up to date" case.
