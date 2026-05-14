@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.2.0 — 2026-05-13
+
+**LMB-pan camera control.** Holding left-click while not over a UI window now rotates the camera around your character (yaw on mouse-X, pitch on mouse-Y). The behavior matches WoW's free-look:
+
+- **Drag to look around.** Left-click and drag rotates the camera; the cursor is hidden during the drag and pinned inside the game window.
+- **Release to keep the angle.** When you let go of left-click, the camera stays at the new angle — drag again to add more rotation on top of it.
+- **Right-click to reset.** Press right-mouse-button any time after a pan to instantly snap the camera back to the vanilla behind-the-character view. Existing right-click mouselook ("drive") still works normally; it's the act of pressing RMB that triggers the snap-back.
+- **UI clicks pass through.** Clicking on UI windows (Options sliders, inventory drag, hotbar buttons, etc.) does NOT engage the pan — the click goes to the UI as usual. The guard reads the live UI window-manager state, so it covers every UI window EQ renders.
+- **Slider-coupled sensitivity.** LMB-pan tracks the in-game `MouseSensitivity` slider (Options → Mouse) — adjusting the slider scales both right-click drive AND left-click pan together.
+
+**Right-click drive H/V parity, take 2.** v1.1.0's mouse parity fix matched X and Y axis multipliers in `eqgame.exe`'s per-frame mouse handler, but procMouse's full formula is `output = mult * (delta / span) * scale` — and the per-axis `span` is the viewport dimension. On a non-square monitor (every modern display) the X/Y span ratio reintroduces the same disparity from the other direction: v1.1.0 fixed "vertical too slow" by overshooting into "vertical too fast" on widescreens. v1.2.0 reads `screen_height / screen_width` from `GetSystemMetrics` at startup and writes that aspect ratio into the Y-axis scale constant — so the formula simplifies to symmetric per-pixel behavior across both axes regardless of display dimensions. Effective values: 4K (16:9) lands at `512 * 2160/3840 = 288`, 16:10 at 320, 4:3 at 384. Friends on different resolutions get the right ratio automatically.
+
+**Built from:** [nightwreath/Zeal-RoF2 `4a70c4c`](https://github.com/nightwreath/Zeal-RoF2/commit/4a70c4c) — Session 15 (R3 Stage 2 complete).
+
+**Friend notes:** no action required. Auto-updater pulls the new `Zeal.asi` on next launch; Miles auto-loads it; LMB-pan is live. If your antivirus blocked the v1.1.0 `Zeal.asi`, it'll block v1.2.0 the same way — add the EQ folder to exclusions (see v1.1.0 notes for Bitdefender path).
+
 ## v1.1.0 — 2026-05-13
 
 **First Zeal-RoF2 ship — H/V mouse-look parity.**
