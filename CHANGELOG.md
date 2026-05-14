@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.1 — 2026-05-13
+
+**LMB-pan ClipCursor leak fix.** v1.2.0 used `ClipCursor` to keep the (hidden) cursor inside the EQ window during an active LMB-pan, so it couldn't wander onto a second monitor mid-drag. The fix had no focus-loss guard, so alt-tabbing out of EQ in windowed mode (or clicking another window) could leave the cursor clipped to the EQ rectangle even when EQ was in the background — breaking text selection, the snipping tool, and general Windows multitasking until the clip was manually cleared.
+
+v1.2.1 gates the LMB-pan input poll on EQ-having-foreground-focus:
+
+- **Background EQ does nothing.** When EQ isn't the foreground window, the LMB-pan logic skips its `GetAsyncKeyState` poll entirely (`VK_LBUTTON` is global state, so reading it would otherwise let clicks in another app drive us into a pan) and unconditionally calls `ClipCursor(nullptr)` so the user's other apps work normally.
+- **Mid-pan focus loss demotes cleanly.** If LMB-pan was active (`PANNING`) when EQ lost focus, the camera angle persists (state demotes to `HELD`, offsets kept), cursor visibility is restored, and the clip rectangle is released. When you return to EQ, releasing and re-pressing LMB resumes panning from the held angle as usual.
+
+**Built from:** [nightwreath/Zeal-RoF2 `c6c3810`](https://github.com/nightwreath/Zeal-RoF2/commit/c6c3810) — focus-aware `poll_input` patch on top of v1.2.0's `4a70c4c`.
+
+**Friend notes:** no action required. Auto-updater pulls the new `Zeal.asi` on next launch.
+
 ## v1.2.0 — 2026-05-13
 
 **LMB-pan camera control.** Holding left-click while not over a UI window now rotates the camera around your character (yaw on mouse-X, pitch on mouse-Y). The behavior matches WoW's free-look:
