@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.3.0 — 2026-05-15
+
+**Classic-zone fidelity: Nektulos & Lavastorm.** These zones run TAKP V2.1c classic geometry, but two RoF2 client data files still described the *revamped* versions, breaking immersion:
+
+- **Floating fire/torch emitters removed.** The stock RoF2 `_EnvironmentEmitters.txt` for Nektulos and Lavastorm placed flame/steam emitters at revamped-terrain coordinates, leaving torches and fires hanging in mid-air over the classic geometry. These files are neutralized to header-only — the correct classic torch/lava ambiance comes from each zone's own classic emitter data (TAKP `.emt` + `.s3d`), verified in-game.
+- **Classic in-game maps.** The bundled `maps/` overlays for Nektulos and Lavastorm were the revamped layouts and didn't match the classic zones you actually walk. Replaced with the matching classic set (Brewall original-zone variants), verified in-game against the real geometry.
+
+This is the first non-launcher/non-`Zeal.asi` asset class to ship through the channel (zone content) — hence the minor-version bump.
+
+**Friend notes:** no action required. The auto-updater pulls the new files on next launch. Afterward, the Nektulos and Lavastorm in-game maps match the world and the floating torches/fires are gone. (Bazaar has the same class of issue and is still being worked — not in this release.)
+
+## v1.2.2 — 2026-05-14
+
+**LMB-pan "both buttons = move forward" fix.** When holding LMB to pan the camera and then pressing RMB while LMB is still held, the character now starts moving forward — matching EQ's normal "hold both mouse buttons = autorun" behavior.
+
+The root cause: v1.2.0/v1.2.1 held a `ClipCursor` active for the entire PANNING state (for multi-monitor cursor containment). EQ's `WM_RBUTTONDOWN` handler activates camera-turn mode by calling its own `ClipCursor` internally — but with Zeal's clip already active when that message arrived, EQ's camera-turn setup failed silently. Camera-turn mode not entering means the "both buttons held = move" mechanic never fires.
+
+Fix: `ClipCursor` is removed from the panning lifecycle entirely. Multi-monitor cursor containment is preserved by the existing 100-pixel edge-recenter guard — when the hidden cursor approaches any edge of the EQ window, it's warped back toward center before it can cross onto a second monitor.
+
+**Built from:** [nightwreath/Zeal-RoF2 `d5f8bd0`](https://github.com/nightwreath/Zeal-RoF2/commit/d5f8bd0)
+
+**Friend notes:** no action required. Auto-updater pulls the new `Zeal.asi` on next launch.
+
 ## v1.2.1 — 2026-05-13
 
 **LMB-pan ClipCursor leak fix.** v1.2.0 used `ClipCursor` to keep the (hidden) cursor inside the EQ window during an active LMB-pan, so it couldn't wander onto a second monitor mid-drag. The fix had no focus-loss guard, so alt-tabbing out of EQ in windowed mode (or clicking another window) could leave the cursor clipped to the EQ rectangle even when EQ was in the background — breaking text selection, the snipping tool, and general Windows multitasking until the clip was manually cleared.

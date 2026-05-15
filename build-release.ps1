@@ -48,6 +48,54 @@ $ManagedFiles = @(
         install_path = 'Zeal.asi'
         source       = Join-Path $RepoRoot 'Zeal.asi'
     }
+    # Classic-zone fidelity (Session 24). These zones run TAKP V2.1c classic
+    # geometry; the stock RoF2 _EnvironmentEmitters.txt described the revamped
+    # zones (floating torches/fires) and the bundled maps were the revamped
+    # layouts. Emitter files are neutralized to header-only (overwrites the
+    # friend's revamped one -> client falls back to the zone's classic .emt);
+    # maps are the Brewall original-zone variants. install_path with a "maps/"
+    # prefix is handled by the launcher (it Split-Path's the parent and
+    # New-Item -Force creates it if absent).
+    @{
+        name         = 'nektulos_EnvironmentEmitters.txt'
+        install_path = 'nektulos_EnvironmentEmitters.txt'
+        source       = Join-Path $RepoRoot 'nektulos_EnvironmentEmitters.txt'
+    }
+    @{
+        name         = 'lavastorm_EnvironmentEmitters.txt'
+        install_path = 'lavastorm_EnvironmentEmitters.txt'
+        source       = Join-Path $RepoRoot 'lavastorm_EnvironmentEmitters.txt'
+    }
+    @{
+        name         = 'nektulos.txt'
+        install_path = 'maps/nektulos.txt'
+        source       = Join-Path $RepoRoot 'maps\nektulos.txt'
+    }
+    @{
+        name         = 'nektulos_1.txt'
+        install_path = 'maps/nektulos_1.txt'
+        source       = Join-Path $RepoRoot 'maps\nektulos_1.txt'
+    }
+    @{
+        name         = 'nektulos_2.txt'
+        install_path = 'maps/nektulos_2.txt'
+        source       = Join-Path $RepoRoot 'maps\nektulos_2.txt'
+    }
+    @{
+        name         = 'lavastorm.txt'
+        install_path = 'maps/lavastorm.txt'
+        source       = Join-Path $RepoRoot 'maps\lavastorm.txt'
+    }
+    @{
+        name         = 'lavastorm_1.txt'
+        install_path = 'maps/lavastorm_1.txt'
+        source       = Join-Path $RepoRoot 'maps\lavastorm_1.txt'
+    }
+    @{
+        name         = 'lavastorm_2.txt'
+        install_path = 'maps/lavastorm_2.txt'
+        source       = Join-Path $RepoRoot 'maps\lavastorm_2.txt'
+    }
 )
 
 # Compute hashes
