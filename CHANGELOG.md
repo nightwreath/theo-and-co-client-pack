@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.4.4 — 2026-05-16
+
+**Pre-installed bot command buttons (Socials pages 2-5).** Every character now gets a ready-made set of bot Social buttons with zero setup:
+
+- **Page 2 — control/combat:** Attack, Hold / Hold Off, Guard / Guard Off (Guard Off also makes bots follow you again), Follow Me, Pull, Bal/Agg Stance, Taunt On/Off, Camp All.
+- **Page 3 — group/manage:** Invite Bot, Disband Bot, Bot List, Bot Report, Summon, Camp All, Camp Bot (logs out one targeted bot), Delete Bot (permanently deletes the targeted bot — no confirmation prompt, use carefully).
+- **Pages 4-5 — create one of each class:** New WAR … New BST. Each makes a bot named after your character, with a class-valid race/gender.
+
+Your Page 1 defaults and any of your own socials are untouched — only pages 2-5 are managed, and they re-assert every launch.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Open the Actions window → Socials; pages 2-5 are filled. Drag any button onto a hotbar if you like. (Bot buttons appear for a brand-new character from its *second* launch — the character's settings file doesn't exist until it has logged in once.)
+
 ## v1.4.3 — 2026-05-16
 
 **Correct classic in-game maps for the classic zones.** A map audit found four zones that load classic geometry on RoF2 but were showing a non-classic / mismatched in-game map: **Highpass** (served via Highpass Hold), **Commonlands**, **Misty Thicket**, and **Toxxulia Forest**. Replaced with the matching classic maps (Brewall classic set), verified in-game against the real geometry. The in-game map now matches what you walk in all four. (Bazaar stays mapless on purpose — no correct classic bazaar map exists, and a blank map beats a wrong one.)
