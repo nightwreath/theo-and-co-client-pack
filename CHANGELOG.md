@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.0 — 2026-05-15
+
+**Classic Highpass restored.** "Highpass Hold" now loads the **classic** Highpass zone (geometry, NPCs, layout) instead of the modern Serpent's Spine revamp. The RoF2 client can't reach the original classic Highpass zone id directly (it was removed from the client binary), so classic Highpass is served through the reachable Highpass Hold zone — server-side spawns, loot, level design, and zone connections were switched to the classic set, and these client files deliver the matching classic geometry.
+
+- Classic Highpass `.s3d` geometry (sourced from the Firiona Vie Project's correctly-repackaged set) + matching emitter/sound files.
+- The modern revamp's `highpasshold.eqg` / `.zon` / `_EnvironmentEmitters.txt` are **removed** by the updater — RoF2 loads the modern `.eqg` in preference to the classic `.s3d`, so the swap only takes effect once those are gone.
+
+**New updater capability:** the launcher can now **delete** files a release marks for removal (not just add/replace), with the same safety guards as installs (inside the EQ root only, never a managed file, idempotent, retries next launch on failure). This is what makes the Highpass `.eqg` removal possible.
+
+**Friend notes:** no action required. The auto-updater pulls the classic Highpass files and removes the conflicting modern ones on next launch. Zone into Highpass Hold (via Kithicor, East Karana, or Highkeep) and you'll be in classic Highpass. (Music currently uses the modern track — a cosmetic item still being looked at; everything else is classic.)
+
 ## v1.3.0 — 2026-05-15
 
 **Classic-zone fidelity: Nektulos & Lavastorm.** These zones run TAKP V2.1c classic geometry, but two RoF2 client data files still described the *revamped* versions, breaking immersion:

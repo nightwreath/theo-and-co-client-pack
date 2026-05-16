@@ -5,3 +5,10 @@ manifest.json
 # https://github.com/nightwreath/Zeal-RoF2 and uploaded as a release asset.
 # Kept out of git to avoid bloating history with ~10MB binaries per version.
 Zeal.asi
+
+# Classic Highpass geometry (FV Project Highpasshold.zip, repackaged with
+# internal WLDs renamed). Multi-MB binary .s3d archives — staged here before
+# build-release and uploaded as release assets, kept out of git like Zeal.asi.
+highpasshold.s3d
+highpasshold_obj.s3d
+highpasshold_chr.s3d

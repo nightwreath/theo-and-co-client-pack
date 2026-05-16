@@ -255,6 +255,46 @@ function Update-ClientPack {
             }
         }
 
+        # Deletions: files the bundle wants REMOVED from the friend's client
+        # (e.g. the modern highpasshold.eqg/.zon, which RoF2 loads in
+        # preference to the classic .s3d we ship -- the swap is inert until
+        # they're gone). Idempotent: absent = already handled on a prior
+        # launch. Older launchers ignore $manifest.deletions entirely, so the
+        # manifest stays backward compatible.
+        $deletions = @($manifest.deletions)
+        $deleted   = 0
+        foreach ($delRel in $deletions) {
+            if ([string]::IsNullOrWhiteSpace($delRel)) { continue }
+            $delPath = Join-Path $EQRoot $delRel
+
+            # Same guard as installs: never touch anything outside EQ root.
+            if (-not (Test-PathInsideRoot -Path $delPath -Root $EQRoot)) {
+                Write-UpdaterLog "Deletion REJECTED: '$delRel' escapes EQ root."
+                Write-Host "[Launcher] Update aborted (unsafe deletion path: $delRel)." -ForegroundColor Red
+                $allOk = $false
+                continue
+            }
+            # Never delete something this same bundle also installs.
+            if (@($manifest.files | Where-Object { $_.install_path -eq $delRel }).Count -gt 0) {
+                Write-UpdaterLog "Deletion SKIPPED: '$delRel' is also a managed file in this bundle."
+                continue
+            }
+
+            if (Test-Path -LiteralPath $delPath) {
+                try {
+                    Remove-Item -LiteralPath $delPath -Force -ErrorAction Stop
+                    Write-Host "[Launcher]   Removed $delRel" -ForegroundColor Cyan
+                    Write-UpdaterLog "Deleted $delRel -> $remoteTag"
+                    $deleted++
+                } catch {
+                    Write-Host "[Launcher]   Could not remove $delRel; $($_.Exception.Message). Will retry next launch." -ForegroundColor Yellow
+                    Write-UpdaterLog "Deletion FAILED: $delRel : $($_.Exception.Message)"
+                    $allOk = $false
+                }
+            }
+            # absent -> already removed on a prior launch; nothing to do.
+        }
+
         # Defense-in-depth: re-verify every managed file's hash against the
         # manifest. Catches a Move-Item that "succeeded" but didn't actually
         # replace the file (e.g., AV reverted, or a silent share-mode issue).
@@ -272,6 +312,17 @@ function Update-ClientPack {
                 $verifyFailed += "$($entry.name) (missing)"
             }
         }
+        # ...and re-verify every deletion is actually gone (a failed/locked
+        # Remove-Item would otherwise let the version stamp advance with the
+        # modern .eqg still shadowing the classic .s3d).
+        foreach ($delRel in $deletions) {
+            if ([string]::IsNullOrWhiteSpace($delRel)) { continue }
+            if (@($manifest.files | Where-Object { $_.install_path -eq $delRel }).Count -gt 0) { continue }
+            $delPath = Join-Path $EQRoot $delRel
+            if ((Test-PathInsideRoot -Path $delPath -Root $EQRoot) -and (Test-Path -LiteralPath $delPath)) {
+                $verifyFailed += "$delRel (still present)"
+            }
+        }
         if ($verifyFailed.Count -gt 0) {
             Write-Host "[Launcher] Integrity check FAILED for: $($verifyFailed -join ', '). Will retry next launch." -ForegroundColor Red
             Write-UpdaterLog "Integrity FAILED: $($verifyFailed -join ', '). Version stamp held at $displayLocal."
@@ -280,12 +331,13 @@ function Update-ClientPack {
 
         if ($allOk) {
             Set-Content -Path $VersionFile -Value $remoteTag -NoNewline
-            if ($downloaded -gt 0) {
-                Write-Host "[Launcher] Updated $displayLocal -> $remoteTag ($downloaded file$(if($downloaded -ne 1){'s'}) downloaded)." -ForegroundColor Green
+            if ($downloaded -gt 0 -or $deleted -gt 0) {
+                $delMsg = if ($deleted -gt 0) { ", $deleted removed" } else { '' }
+                Write-Host "[Launcher] Updated $displayLocal -> $remoteTag ($downloaded file$(if($downloaded -ne 1){'s'}) downloaded$delMsg)." -ForegroundColor Green
             } else {
                 Write-Host "[Launcher] Version stamp advanced to $remoteTag (all files already at correct hash)." -ForegroundColor Green
             }
-            Write-UpdaterLog "Update OK: $displayLocal -> $remoteTag ($downloaded downloaded, $alreadyValid already valid)."
+            Write-UpdaterLog "Update OK: $displayLocal -> $remoteTag ($downloaded downloaded, $deleted removed, $alreadyValid already valid)."
         }
         else {
             Write-Host "[Launcher] Update completed with errors; version stamp NOT advanced. See $UpdaterLog for details." -ForegroundColor Yellow

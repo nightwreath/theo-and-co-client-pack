@@ -96,6 +96,61 @@ $ManagedFiles = @(
         install_path = 'maps/lavastorm_2.txt'
         source       = Join-Path $RepoRoot 'maps\lavastorm_2.txt'
     }
+    # Classic Highpass (Session 25). The reachable `highpasshold` zone (id
+    # 407) now serves classic Highpass: server DB/maps already done (sql/029
+    # +030); these are the CLIENT geometry/audio. Geometry = FV Project's
+    # Highpasshold.zip (classic content repackaged with internal WLDs renamed
+    # -- a naive outer rename renders a blank void; see ARCHITECTURE quirk
+    # #11). The modern revamp's highpasshold.eqg/.zon/_EnvironmentEmitters.txt
+    # MUST be removed (RoF2 loads .eqg over .s3d) -- handled via
+    # $ManagedDeletions below. .emt is the music-line-removed file validated
+    # on Alex's client. install_path is the EQ root (siblings of eqgame.exe).
+    @{
+        name         = 'highpasshold.s3d'
+        install_path = 'highpasshold.s3d'
+        source       = Join-Path $RepoRoot 'highpasshold.s3d'
+    }
+    @{
+        name         = 'highpasshold_obj.s3d'
+        install_path = 'highpasshold_obj.s3d'
+        source       = Join-Path $RepoRoot 'highpasshold_obj.s3d'
+    }
+    @{
+        name         = 'highpasshold_chr.s3d'
+        install_path = 'highpasshold_chr.s3d'
+        source       = Join-Path $RepoRoot 'highpasshold_chr.s3d'
+    }
+    @{
+        name         = 'highpasshold.emt'
+        install_path = 'highpasshold.emt'
+        source       = Join-Path $RepoRoot 'highpasshold.emt'
+    }
+    @{
+        name         = 'highpasshold_chr.txt'
+        install_path = 'highpasshold_chr.txt'
+        source       = Join-Path $RepoRoot 'highpasshold_chr.txt'
+    }
+    @{
+        name         = 'highpasshold_sndbnk.eff'
+        install_path = 'highpasshold_sndbnk.eff'
+        source       = Join-Path $RepoRoot 'highpasshold_sndbnk.eff'
+    }
+    @{
+        name         = 'highpasshold_sounds.eff'
+        install_path = 'highpasshold_sounds.eff'
+        source       = Join-Path $RepoRoot 'highpasshold_sounds.eff'
+    }
+)
+
+# Files to DELETE from the friend's EQ root (relative to it, same base as
+# install_path). The launcher removes these if present, idempotently. Used
+# when shipping a classic .s3d that the modern .eqg would otherwise override
+# (RoF2 prefers .eqg > .s3d). Older launchers (pre-delete-manifest) simply
+# ignore this key, so the manifest stays backward compatible.
+$ManagedDeletions = @(
+    'highpasshold.eqg'
+    'highpasshold.zon'
+    'highpasshold_EnvironmentEmitters.txt'
 )
 
 # Compute hashes
@@ -114,8 +169,14 @@ foreach ($file in $ManagedFiles) {
 }
 
 $manifest = [ordered]@{
-    tag   = $Tag
-    files = $entries
+    tag       = $Tag
+    files     = $entries
+    deletions = @($ManagedDeletions)
+}
+
+if ($ManagedDeletions.Count -gt 0) {
+    Write-Host ""
+    foreach ($d in $ManagedDeletions) { Write-Host "  (delete) $d" }
 }
 
 $manifestPath = Join-Path $RepoRoot 'manifest.json'
@@ -131,14 +192,18 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 Write-Host ""
 Write-Host "Wrote $manifestPath (UTF-8, no BOM)"
 Write-Host ""
-Write-Host "Next steps to publish:"
+Write-Host "Next steps to publish (PowerShell -- single-line commands, paste as-is):"
 Write-Host ""
 Write-Host "  git add -A"
-Write-Host "  git commit -m 'Release $Tag'"
+Write-Host "  git commit -m `"Release $Tag`""
 Write-Host "  git tag $Tag"
 Write-Host "  git push origin main --tags"
 Write-Host ""
-Write-Host "  gh release create $Tag --title '$Tag' --notes-file CHANGELOG.md \"
-$assetArgs = ($ManagedFiles | ForEach-Object { "    `"$($_.source)`"" }) -join " \`n"
-Write-Host $assetArgs
-Write-Host "    `"$manifestPath`""
+# IMPORTANT: emit ONE single-line PowerShell command with every asset source
+# AND manifest.json. The old version printed bash-style `\` continuations and
+# left manifest.json orphaned on its own line -- pasted into PowerShell it
+# broke, and a release published without the manifest.json asset makes every
+# friend's launcher log "Update skipped (no manifest in release)" and pull
+# nothing (silent failure). One line, no continuations, manifest.json last.
+$assetList = (($ManagedFiles | ForEach-Object { "`"$($_.source)`"" }) + "`"$manifestPath`"") -join ' '
+Write-Host "  gh release create $Tag --title `"$Tag`" --notes-file CHANGELOG.md $assetList"
