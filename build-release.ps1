@@ -107,6 +107,24 @@ $ManagedFiles = @(
         install_path = 'maps/lavastorm_2.txt'
         source       = Join-Path $RepoRoot 'maps\lavastorm_2.txt'
     }
+    # Classic in-game maps (Session 25 map audit). These zones load CLASSIC
+    # geometry on RoF2 but shipped with non-classic / unknown-provenance map
+    # overlays. Brewall classic maps, in-game verified S25 against the real
+    # geometry. highpasshold = classic Highpass served via the reachable
+    # zone (so the map ships under the highpasshold name); commons/misty/tox
+    # are reached under their own classic short-names on RoF2.
+    @{ name='highpasshold.txt';   install_path='maps/highpasshold.txt';   source=Join-Path $RepoRoot 'maps\highpasshold.txt' }
+    @{ name='highpasshold_1.txt'; install_path='maps/highpasshold_1.txt'; source=Join-Path $RepoRoot 'maps\highpasshold_1.txt' }
+    @{ name='highpasshold_2.txt'; install_path='maps/highpasshold_2.txt'; source=Join-Path $RepoRoot 'maps\highpasshold_2.txt' }
+    @{ name='commons.txt';        install_path='maps/commons.txt';        source=Join-Path $RepoRoot 'maps\commons.txt' }
+    @{ name='commons_1.txt';      install_path='maps/commons_1.txt';      source=Join-Path $RepoRoot 'maps\commons_1.txt' }
+    @{ name='commons_2.txt';      install_path='maps/commons_2.txt';      source=Join-Path $RepoRoot 'maps\commons_2.txt' }
+    @{ name='misty.txt';          install_path='maps/misty.txt';          source=Join-Path $RepoRoot 'maps\misty.txt' }
+    @{ name='misty_1.txt';        install_path='maps/misty_1.txt';        source=Join-Path $RepoRoot 'maps\misty_1.txt' }
+    @{ name='misty_2.txt';        install_path='maps/misty_2.txt';        source=Join-Path $RepoRoot 'maps\misty_2.txt' }
+    @{ name='tox.txt';            install_path='maps/tox.txt';            source=Join-Path $RepoRoot 'maps\tox.txt' }
+    @{ name='tox_1.txt';          install_path='maps/tox_1.txt';          source=Join-Path $RepoRoot 'maps\tox_1.txt' }
+    @{ name='tox_2.txt';          install_path='maps/tox_2.txt';          source=Join-Path $RepoRoot 'maps\tox_2.txt' }
     # Classic Highpass (Session 25). The reachable `highpasshold` zone (id
     # 407) now serves classic Highpass: server DB/maps already done (sql/029
     # +030); these are the CLIENT geometry/audio. Geometry = FV Project's

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.3 — 2026-05-16
+
+**Correct classic in-game maps for the classic zones.** A map audit found four zones that load classic geometry on RoF2 but were showing a non-classic / mismatched in-game map: **Highpass** (served via Highpass Hold), **Commonlands**, **Misty Thicket**, and **Toxxulia Forest**. Replaced with the matching classic maps (Brewall classic set), verified in-game against the real geometry. The in-game map now matches what you walk in all four. (Bazaar stays mapless on purpose — no correct classic bazaar map exists, and a blank map beats a wrong one.)
+
+**Friend notes:** no action required — the updater applies it on next launch (single launch, via the starter from v1.4.2).
+
 ## v1.4.2 — 2026-05-16
 
 **Updates now apply in a single launch.** Previously, a *launcher* update needed 2–3 game launches to fully take effect (a running script can't replace itself, so the new launcher only kicked in a run or two later). Added a tiny stable **starter** (`Run_Theo_and_Co.ps1`) that `Play_EQ.bat` and the desktop shortcut now run: it grabs the latest launcher first, then runs it — so everything (launcher + content + cleanups) applies in one launch. The starter itself never changes, so this is permanent.
