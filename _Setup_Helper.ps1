@@ -10,7 +10,7 @@ $linkPath    = Join-Path $desktop "EQ - Theo and Co.lnk"
 
 $lnk                  = $WshShell.CreateShortcut($linkPath)
 $lnk.TargetPath       = "powershell.exe"
-$lnk.Arguments        = "-NoProfile -ExecutionPolicy Bypass -File `"$here\Launch_EQ.ps1`""
+$lnk.Arguments        = "-NoProfile -ExecutionPolicy Bypass -File `"$here\Run_Theo_and_Co.ps1`""
 $lnk.WorkingDirectory = $eqroot
 $lnk.IconLocation     = Join-Path $eqroot "Everquest.ico"
 $lnk.Save()

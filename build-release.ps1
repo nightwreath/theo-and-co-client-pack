@@ -22,6 +22,17 @@ $ManagedFiles = @(
         source       = Join-Path $RepoRoot 'Launch_EQ.ps1'
     }
     @{
+        # Stable bootstrap/starter. Friends launch through this (Play_EQ.bat
+        # and the desktop shortcut both point here now). It fetches the
+        # latest Launch_EQ.ps1 then runs it -- so a launcher update fully
+        # applies in ONE run instead of the 3-run self-update bootstrap lag.
+        # Designed to never need changing; shipped as a managed file anyway
+        # so a fix CAN be pushed (rare; would take the one-time lag itself).
+        name         = 'Run_Theo_and_Co.ps1'
+        install_path = 'Theo and Co/Run_Theo_and_Co.ps1'
+        source       = Join-Path $RepoRoot 'Run_Theo_and_Co.ps1'
+    }
+    @{
         name         = 'Play_EQ.bat'
         install_path = 'Theo and Co/Play_EQ.bat'
         source       = Join-Path $RepoRoot 'Play_EQ.bat'

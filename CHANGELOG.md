@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.2 — 2026-05-16
+
+**Updates now apply in a single launch.** Previously, a *launcher* update needed 2–3 game launches to fully take effect (a running script can't replace itself, so the new launcher only kicked in a run or two later). Added a tiny stable **starter** (`Run_Theo_and_Co.ps1`) that `Play_EQ.bat` and the desktop shortcut now run: it grabs the latest launcher first, then runs it — so everything (launcher + content + cleanups) applies in one launch. The starter itself never changes, so this is permanent.
+
+If a network hiccup happens, the starter just runs the launcher you already have — it never blocks the game.
+
+**Friend notes:** no action required. This particular update still rides the old path once to deliver the starter; from the next launch onward, every future update is a single launch. Keep starting the game with `Play_EQ.bat` (or your desktop shortcut). If you want the shortcut itself refreshed, re-run `First_Time_Setup.bat` once (optional — `Play_EQ.bat` already gets the benefit).
+
 ## v1.4.1 — 2026-05-15
 
 **Fix: the delete-manifest now actually reaches everyone.** v1.4.0 shipped the classic Highpass files but, for anyone upgrading from an older launcher, the modern `highpasshold.eqg`/`.zon` were never removed — so RoF2 kept loading the modern zone over the classic `.s3d` and Highpass still looked modern. Cause: the launcher updates *itself* via a deferred-apply bootstrap, so the delete-capable launcher code only starts running *after* the version stamp already advanced; the deletion pass was gated behind a version change and therefore never fired for upgraders.
