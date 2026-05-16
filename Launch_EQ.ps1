@@ -63,6 +63,7 @@ $EQRoot      = Split-Path $PSScriptRoot -Parent           # parent of "Theo and 
 $IniPath     = Join-Path $EQRoot 'eqclient.ini'
 $VersionFile = Join-Path $PSScriptRoot 'theo_and_co.version'
 $UpdaterLog  = Join-Path $PSScriptRoot 'theo_and_co_updater.log'
+$ServerToken = 'TheoAndCo'   # the <Char>_<ServerToken>.ini suffix used by this server's client
 
 # Settings re-stamped into eqclient.ini before every EQ launch. The key
 # must already exist in eqclient.ini under whatever section. To turn off
@@ -392,6 +393,195 @@ function Wait-ForKeyPress {
     }
 }
 
+# --- Bot Socials -------------------------------------------------------------
+# Pre-installed bot command buttons (Phase 3 Tier 1). Socials are client-side
+# and per-character (<Char>_<ServerToken>.ini, [Socials] section). Bot names
+# are GLOBALLY unique server-wide, so each character's create buttons must use
+# a name unique to that character -- the launcher templates the character's
+# own name (from the ini filename) into every "{P}" placeholder below.
+#
+# Idempotent and re-asserted every launch (same philosophy as $LockedSettings):
+# only the keys for OUR managed buttons (pages 2-5) are written; the friend's
+# other socials/pages are never touched. A brand-new character has no ini until
+# it first logs in/camps, so it gets these on its *next* launch.
+#
+# Pages: 2 = control/combat, 3 = group/manage, 4-5 = per-class create.
+
+$BotClasses = @(
+    @{ Tag = 'war'; Cls = 1;  Race = 1   }   # Warrior      Human
+    @{ Tag = 'clr'; Cls = 2;  Race = 1   }   # Cleric       Human
+    @{ Tag = 'pal'; Cls = 3;  Race = 1   }   # Paladin      Human
+    @{ Tag = 'rng'; Cls = 4;  Race = 4   }   # Ranger       Wood Elf
+    @{ Tag = 'shd'; Cls = 5;  Race = 6   }   # Shadow Knight Dark Elf
+    @{ Tag = 'dru'; Cls = 6;  Race = 4   }   # Druid        Wood Elf
+    @{ Tag = 'mnk'; Cls = 7;  Race = 1   }   # Monk         Human
+    @{ Tag = 'brd'; Cls = 8;  Race = 1   }   # Bard         Human
+    @{ Tag = 'rog'; Cls = 9;  Race = 1   }   # Rogue        Human
+    @{ Tag = 'shm'; Cls = 10; Race = 2   }   # Shaman       Barbarian
+    @{ Tag = 'nec'; Cls = 11; Race = 1   }   # Necromancer  Human
+    @{ Tag = 'wiz'; Cls = 12; Race = 1   }   # Wizard       Human
+    @{ Tag = 'mag'; Cls = 13; Race = 1   }   # Magician     Human
+    @{ Tag = 'enc'; Cls = 14; Race = 1   }   # Enchanter    Human
+    @{ Tag = 'bst'; Cls = 15; Race = 130 }   # Beastlord    Vah Shir
+)
+
+# Each button: @{ P=page; B=button; Name='...'; Lines=@('line1', 'line2'...) }.
+# {P} in any line is replaced with the per-character bot-name prefix.
+function Get-BotSocialButtons {
+    $btns = @()
+
+    # Page 2 -- Control / Combat. ('spawned' actionable = all my spawned bots.)
+    $ctrl = @(
+        @{ Name = 'Attack';     Cmd = '^attack spawned'        }
+        @{ Name = 'Hold';       Cmd = '^hold spawned'          }
+        @{ Name = 'Release';    Cmd = '^release spawned'       }
+        @{ Name = 'Follow Me';  Cmd = '^follow reset spawned'  }
+        @{ Name = 'Guard';      Cmd = '^guard spawned'         }
+        @{ Name = 'Pull';       Cmd = '^pull spawned'          }
+        @{ Name = 'Bal Stance'; Cmd = '^botstance 2 spawned'   }
+        @{ Name = 'Agg Stance'; Cmd = '^botstance 5 spawned'   }
+        @{ Name = 'Taunt On';   Cmd = '^taunt on spawned'      }
+        @{ Name = 'Taunt Off';  Cmd = '^taunt off spawned'     }
+        @{ Name = 'Summon';     Cmd = '^botsummon spawned'     }
+        @{ Name = 'Camp All';   Cmd = '^botcamp spawned'       }
+    )
+    for ($i = 0; $i -lt $ctrl.Count; $i++) {
+        $btns += @{ P = 2; B = ($i + 1); Name = $ctrl[$i].Name; Lines = @($ctrl[$i].Cmd) }
+    }
+
+    # Page 3 -- Group / manage. (Invite/Disband: target a bot first.)
+    $grp = @(
+        @{ Name = 'Invite Bot';  Cmd = '/invite'             }
+        @{ Name = 'Disband Bot'; Cmd = '/disband'            }
+        @{ Name = 'Bot List';    Cmd = '^botlist'            }
+        @{ Name = 'Bot Report';  Cmd = '^botreport spawned'  }
+        @{ Name = 'Summon';      Cmd = '^botsummon spawned'  }
+        @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
+    )
+    for ($i = 0; $i -lt $grp.Count; $i++) {
+        $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
+    }
+
+    # Pages 4-5 -- per-class create (12 on p4, 3 on p5). {P} -> char prefix.
+    for ($i = 0; $i -lt $BotClasses.Count; $i++) {
+        $c    = $BotClasses[$i]
+        $page = if ($i -lt 12) { 4 } else { 5 }
+        $btn  = if ($i -lt 12) { $i + 1 } else { $i - 11 }
+        $btns += @{
+            P = $page; B = $btn; Name = ('New ' + $c.Tag.ToUpper())
+            Lines = @(
+                ('^botcreate {{P}}{0} {1} {2} 0' -f $c.Tag, $c.Cls, $c.Race)
+                ('^botspawn {{P}}{0}' -f $c.Tag)
+            )
+        }
+    }
+
+    return $btns
+}
+
+function Get-BotNamePrefix {
+    # Char name from "<Char>_<ServerToken>.ini": A-Za-z only, first letter
+    # upper / rest lower, truncated to 12 so prefix+3-char tag stays within
+    # EQ's 15-char bot-name limit.
+    param([string]$IniFileName)
+    $base = $IniFileName -replace ('_' + [regex]::Escape($ServerToken) + '\.ini$'), ''
+    $base = ($base -replace '[^A-Za-z]', '')
+    if ($base.Length -lt 1) { return $null }
+    $p = $base.Substring(0, 1).ToUpper()
+    if ($base.Length -gt 1) { $p += $base.Substring(1).ToLower() }
+    if ($p.Length -gt 12) { $p = $p.Substring(0, 12) }
+    return $p
+}
+
+function Set-BotSocials {
+    # Inject the managed [Socials] buttons into every character ini. Never
+    # throws -- a failure on one file logs and is skipped; launch is never
+    # blocked.
+    $btns = Get-BotSocialButtons
+    $iniFiles = Get-ChildItem -LiteralPath $EQRoot -Filter ("*_{0}.ini" -f $ServerToken) -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -notlike 'UI_*' }
+
+    foreach ($ini in $iniFiles) {
+        try {
+            $prefix = Get-BotNamePrefix -IniFileName $ini.Name
+            if (-not $prefix) { continue }
+
+            # Flat key=value map for this character (managed keys only).
+            $managed = [ordered]@{}
+            foreach ($b in $btns) {
+                $k = "Page$($b.P)Button$($b.B)"
+                $managed["${k}Name"]  = $b.Name
+                $managed["${k}Color"] = '0'
+                for ($n = 0; $n -lt $b.Lines.Count; $n++) {
+                    $managed["${k}Line$($n + 1)"] = ($b.Lines[$n] -replace '\{P\}', $prefix)
+                }
+            }
+
+            $content = Get-Content -LiteralPath $ini.FullName -Raw -ErrorAction Stop
+            if ($null -eq $content) { $content = '' }
+
+            # Locate the [Socials] section (case-insensitive header match;
+            # tolerate the header being the final line with no trailing nl).
+            $headerRx = [regex]'(?im)^\[Socials\][^\r\n]*(\r?\n|$)'
+            $hm = $headerRx.Match($content)
+
+            if (-not $hm.Success) {
+                # No section -- append one with all managed keys.
+                $nl = "`r`n"
+                if ($content.Length -gt 0 -and -not $content.EndsWith("`n")) { $content += $nl }
+                $block = "[Socials]$nl"
+                foreach ($mk in $managed.Keys) { $block += "$mk=$($managed[$mk])$nl" }
+                $content += $block
+            }
+            else {
+                $secStart = $hm.Index + $hm.Length
+                # Section ends at the next "[Header]" line or EOF.
+                $nextRx = [regex]'(?m)^\['
+                $nm = $nextRx.Match($content, $secStart)
+                $secEnd  = if ($nm.Success) { $nm.Index } else { $content.Length }
+
+                $pre  = $content.Substring(0, $secStart)
+                $sec  = $content.Substring($secStart, $secEnd - $secStart)
+                $post = $content.Substring($secEnd)
+
+                $toAppend = @()
+                foreach ($mk in $managed.Keys) {
+                    $mv = $managed[$mk]
+                    # Match only the value chars (NOT the trailing CR/LF), so
+                    # the line's CRLF survives the replace -- otherwise an
+                    # already-present key loses its \r every run and the
+                    # section collapses (idempotency break).
+                    $lineRx = [regex]('(?m)^' + [regex]::Escape($mk) + '=[^\r\n]*')
+                    if ($lineRx.IsMatch($sec)) {
+                        # MatchEvaluator returns a constant, so a '$' in the
+                        # value is never treated as a regex substitution.
+                        $newLine = "$mk=$mv"
+                        $eval = [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newLine }
+                        $sec = $lineRx.Replace($sec, $eval, 1)
+                    } else {
+                        $toAppend += "$mk=$mv"
+                    }
+                }
+                if ($toAppend.Count -gt 0) {
+                    $trimmed = $sec -replace '\s+$', ''
+                    if ($trimmed -ne '') {
+                        $sec = $trimmed + "`r`n" + ($toAppend -join "`r`n") + "`r`n"
+                    } else {
+                        $sec = ($toAppend -join "`r`n") + "`r`n"
+                    }
+                }
+                $content = $pre + $sec + $post
+            }
+
+            Set-Content -LiteralPath $ini.FullName -Value $content -NoNewline -ErrorAction Stop
+            Write-UpdaterLog "Bot socials injected into $($ini.Name) (prefix '$prefix')."
+        }
+        catch {
+            Write-UpdaterLog "Bot socials SKIPPED for $($ini.Name): $($_.Exception.Message)"
+        }
+    }
+}
+
 # --- Run ----------------------------------------------------------------------
 
 Resolve-PendingUpdates
@@ -440,6 +630,11 @@ if (Test-Path $IniPath) {
     }
     Set-Content -Path $IniPath -Value $content -NoNewline
 }
+
+# Pre-install the bot command Socials into every character ini (idempotent,
+# per-character templated). Done before launch so the client reads them at
+# char-select; never blocks launch.
+Set-BotSocials
 
 Write-Host "[Launcher] Launching EverQuest..."
 Start-Process -FilePath (Join-Path $EQRoot 'eqgame.exe') `
