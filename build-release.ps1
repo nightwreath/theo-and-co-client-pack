@@ -151,6 +151,16 @@ $ManagedDeletions = @(
     'highpasshold.eqg'
     'highpasshold.zon'
     'highpasshold_EnvironmentEmitters.txt'
+    # Bazaar (Session 25). Bazaar runs TAKP V2.1c classic geometry, but the
+    # stock RoF2 bazaar maps are the revamped DoDh layout (multi-level, does
+    # not match what you walk). No correct classic bazaar overlay exists
+    # (Brewall ships none; TAKP ships no map overlays). Decision: ship NO
+    # bazaar map -- a blank in-game map beats a wrong one. Delete the
+    # revamped overlays so none loads.
+    'maps/bazaar.txt'
+    'maps/bazaar_1.txt'
+    'maps/bazaar_2.txt'
+    'maps/bazaar_3.txt'
 )
 
 # Compute hashes

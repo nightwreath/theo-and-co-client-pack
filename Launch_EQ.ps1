@@ -152,6 +152,51 @@ function Get-JsonFromUrl {
     return $text | ConvertFrom-Json
 }
 
+function Invoke-ManifestDeletions {
+    # Reconcile the manifest's deletion list against disk. Idempotent: a file
+    # already gone is a no-op. Called on EVERY launch (including "up to date")
+    # -- deliberately NOT gated behind a version-tag change. Reason: the
+    # launcher updates itself via the .new / Resolve-PendingUpdates bootstrap,
+    # so by the time delete-capable launcher code first *executes*, an older
+    # in-memory launcher has usually already advanced the version stamp to the
+    # remote tag. Gating deletions on a tag mismatch would mean they never run
+    # for anyone upgrading across that boundary (every existing friend). Same
+    # philosophy as $LockedSettings: enforce the invariant every launch.
+    param($Manifest, [string]$Tag)
+    $removed = 0
+    $ok      = $true
+    foreach ($delRel in @($Manifest.deletions)) {
+        if ([string]::IsNullOrWhiteSpace($delRel)) { continue }
+        $delPath = Join-Path $EQRoot $delRel
+        # Same guard as installs: never touch anything outside EQ root.
+        if (-not (Test-PathInsideRoot -Path $delPath -Root $EQRoot)) {
+            Write-UpdaterLog "Deletion REJECTED: '$delRel' escapes EQ root."
+            Write-Host "[Launcher] Skipped unsafe deletion path: $delRel." -ForegroundColor Red
+            $ok = $false
+            continue
+        }
+        # Never delete something this same bundle also installs.
+        if (@($Manifest.files | Where-Object { $_.install_path -eq $delRel }).Count -gt 0) {
+            Write-UpdaterLog "Deletion SKIPPED: '$delRel' is also a managed file in this bundle."
+            continue
+        }
+        if (Test-Path -LiteralPath $delPath) {
+            try {
+                Remove-Item -LiteralPath $delPath -Force -ErrorAction Stop
+                Write-Host "[Launcher]   Removed $delRel" -ForegroundColor Cyan
+                Write-UpdaterLog "Deleted $delRel ($Tag)"
+                $removed++
+            } catch {
+                Write-Host "[Launcher]   Could not remove $delRel; $($_.Exception.Message). Will retry next launch." -ForegroundColor Yellow
+                Write-UpdaterLog "Deletion FAILED: $delRel : $($_.Exception.Message)"
+                $ok = $false
+            }
+        }
+        # absent -> already removed on a prior launch; nothing to do.
+    }
+    return [pscustomobject]@{ Removed = $removed; Ok = $ok }
+}
+
 function Update-ClientPack {
     $localTag = Get-LocalTag
 
@@ -166,6 +211,23 @@ function Update-ClientPack {
         if ($remoteTag -eq $localTag) {
             Write-Host "[Launcher] Up to date at $localTag." -ForegroundColor Green
             Write-UpdaterLog "Check OK: up to date at $localTag."
+            # Even when up to date, reconcile deletions every launch
+            # (idempotent). This is the path that actually delivers a
+            # delete-manifest to friends: the delete-capable launcher only
+            # starts executing AFTER the version stamp already moved (the
+            # self-update bootstrap lag, see Invoke-ManifestDeletions), so
+            # the normal mismatch flow never runs its deletions for them.
+            try {
+                $mAsset = $release.assets | Where-Object { $_.name -eq 'manifest.json' }
+                if ($mAsset) {
+                    $m = Get-JsonFromUrl -Uri $mAsset.browser_download_url
+                    if ($m.tag -and @($m.files).Count -gt 0) {
+                        $null = Invoke-ManifestDeletions -Manifest $m -Tag $localTag
+                    }
+                }
+            } catch {
+                Write-UpdaterLog "Up-to-date deletion reconcile skipped: $($_.Exception.Message)"
+            }
             return
         }
 
@@ -255,45 +317,13 @@ function Update-ClientPack {
             }
         }
 
-        # Deletions: files the bundle wants REMOVED from the friend's client
-        # (e.g. the modern highpasshold.eqg/.zon, which RoF2 loads in
-        # preference to the classic .s3d we ship -- the swap is inert until
-        # they're gone). Idempotent: absent = already handled on a prior
-        # launch. Older launchers ignore $manifest.deletions entirely, so the
-        # manifest stays backward compatible.
+        # Reconcile deletions (shared with the up-to-date path via the
+        # function). $manifest.deletions is ignored by pre-delete launchers,
+        # so the manifest stays backward compatible.
         $deletions = @($manifest.deletions)
-        $deleted   = 0
-        foreach ($delRel in $deletions) {
-            if ([string]::IsNullOrWhiteSpace($delRel)) { continue }
-            $delPath = Join-Path $EQRoot $delRel
-
-            # Same guard as installs: never touch anything outside EQ root.
-            if (-not (Test-PathInsideRoot -Path $delPath -Root $EQRoot)) {
-                Write-UpdaterLog "Deletion REJECTED: '$delRel' escapes EQ root."
-                Write-Host "[Launcher] Update aborted (unsafe deletion path: $delRel)." -ForegroundColor Red
-                $allOk = $false
-                continue
-            }
-            # Never delete something this same bundle also installs.
-            if (@($manifest.files | Where-Object { $_.install_path -eq $delRel }).Count -gt 0) {
-                Write-UpdaterLog "Deletion SKIPPED: '$delRel' is also a managed file in this bundle."
-                continue
-            }
-
-            if (Test-Path -LiteralPath $delPath) {
-                try {
-                    Remove-Item -LiteralPath $delPath -Force -ErrorAction Stop
-                    Write-Host "[Launcher]   Removed $delRel" -ForegroundColor Cyan
-                    Write-UpdaterLog "Deleted $delRel -> $remoteTag"
-                    $deleted++
-                } catch {
-                    Write-Host "[Launcher]   Could not remove $delRel; $($_.Exception.Message). Will retry next launch." -ForegroundColor Yellow
-                    Write-UpdaterLog "Deletion FAILED: $delRel : $($_.Exception.Message)"
-                    $allOk = $false
-                }
-            }
-            # absent -> already removed on a prior launch; nothing to do.
-        }
+        $delResult = Invoke-ManifestDeletions -Manifest $manifest -Tag $remoteTag
+        $deleted   = $delResult.Removed
+        if (-not $delResult.Ok) { $allOk = $false }
 
         # Defense-in-depth: re-verify every managed file's hash against the
         # manifest. Catches a Move-Item that "succeeded" but didn't actually

@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.1 — 2026-05-15
+
+**Fix: the delete-manifest now actually reaches everyone.** v1.4.0 shipped the classic Highpass files but, for anyone upgrading from an older launcher, the modern `highpasshold.eqg`/`.zon` were never removed — so RoF2 kept loading the modern zone over the classic `.s3d` and Highpass still looked modern. Cause: the launcher updates *itself* via a deferred-apply bootstrap, so the delete-capable launcher code only starts running *after* the version stamp already advanced; the deletion pass was gated behind a version change and therefore never fired for upgraders.
+
+Fix: deletions are now **reconciled every launch, idempotently** (the same approach as the locked-settings enforcement) instead of being gated behind a version bump. Once the fixed launcher is in place, the very next launch removes the conflicting modern files. Also folds in the bazaar map cleanup (the revamped bazaar maps are removed so a blank map shows instead of a wrong one — no correct classic bazaar map exists to ship).
+
+**Friend notes:** no action required. Over the next 1–3 launches the updater swaps in the fixed launcher and then removes the modern Highpass files; Highpass Hold becomes classic Highpass automatically. Supersedes v1.4.0.
+
 ## v1.4.0 — 2026-05-15
 
 **Classic Highpass restored.** "Highpass Hold" now loads the **classic** Highpass zone (geometry, NPCs, layout) instead of the modern Serpent's Spine revamp. The RoF2 client can't reach the original classic Highpass zone id directly (it was removed from the client binary), so classic Highpass is served through the reachable Highpass Hold zone — server-side spawns, loot, level design, and zone connections were switched to the classic set, and these client files deliver the matching classic geometry.
