@@ -408,22 +408,75 @@ function Wait-ForKeyPress {
 # Pages: 2 = control/combat, 3 = group/manage, 4-5 = per-class create.
 
 $BotClasses = @(
-    @{ Tag = 'war'; Cls = 1;  Race = 1   }   # Warrior      Human
-    @{ Tag = 'clr'; Cls = 2;  Race = 1   }   # Cleric       Human
-    @{ Tag = 'pal'; Cls = 3;  Race = 1   }   # Paladin      Human
-    @{ Tag = 'rng'; Cls = 4;  Race = 4   }   # Ranger       Wood Elf
-    @{ Tag = 'shd'; Cls = 5;  Race = 6   }   # Shadow Knight Dark Elf
-    @{ Tag = 'dru'; Cls = 6;  Race = 4   }   # Druid        Wood Elf
-    @{ Tag = 'mnk'; Cls = 7;  Race = 1   }   # Monk         Human
-    @{ Tag = 'brd'; Cls = 8;  Race = 1   }   # Bard         Human
-    @{ Tag = 'rog'; Cls = 9;  Race = 1   }   # Rogue        Human
-    @{ Tag = 'shm'; Cls = 10; Race = 2   }   # Shaman       Barbarian
-    @{ Tag = 'nec'; Cls = 11; Race = 1   }   # Necromancer  Human
-    @{ Tag = 'wiz'; Cls = 12; Race = 1   }   # Wizard       Human
-    @{ Tag = 'mag'; Cls = 13; Race = 1   }   # Magician     Human
-    @{ Tag = 'enc'; Cls = 14; Race = 1   }   # Enchanter    Human
-    @{ Tag = 'bst'; Cls = 15; Race = 130 }   # Beastlord    Vah Shir
+    @{ Tag = 'war'; Cls = 1  }   # Warrior
+    @{ Tag = 'clr'; Cls = 2  }   # Cleric
+    @{ Tag = 'pal'; Cls = 3  }   # Paladin
+    @{ Tag = 'rng'; Cls = 4  }   # Ranger
+    @{ Tag = 'shd'; Cls = 5  }   # Shadow Knight
+    @{ Tag = 'dru'; Cls = 6  }   # Druid
+    @{ Tag = 'mnk'; Cls = 7  }   # Monk
+    @{ Tag = 'brd'; Cls = 8  }   # Bard
+    @{ Tag = 'rog'; Cls = 9  }   # Rogue
+    @{ Tag = 'shm'; Cls = 10 }   # Shaman
+    @{ Tag = 'nec'; Cls = 11 }   # Necromancer
+    @{ Tag = 'wiz'; Cls = 12 }   # Wizard
+    @{ Tag = 'mag'; Cls = 13 }   # Magician
+    @{ Tag = 'enc'; Cls = 14 }   # Enchanter
+    @{ Tag = 'bst'; Cls = 15 }   # Beastlord
 )
+
+# Authoritative race -> allowed-classes bitmask, copied verbatim from the
+# live PEQ DB table `bot_create_combinations` (Session 27). Bit (Cls-1)
+# set => that race may be that class. This is the same data the engine's
+# Bot::IsValidRaceClassCombo checks, so a race picked from here can never
+# produce an "invalid race-class" error. Race IDs are the numeric values
+# ^botcreate expects (1 Human .. 128 Iksar, 130 Vah Shir, 330 Froglok,
+# 522 Drakkin). If the DB table ever changes, re-pull and update here.
+$RaceClasses = @(
+    @{ Race = 1;   Classes = 15871 }
+    @{ Race = 2;   Classes = 49921 }
+    @{ Race = 3;   Classes = 15382 }
+    @{ Race = 4;   Classes = 425   }
+    @{ Race = 5;   Classes = 14342 }
+    @{ Race = 6;   Classes = 15635 }
+    @{ Race = 7;   Classes = 429   }
+    @{ Race = 8;   Classes = 33031 }
+    @{ Race = 9;   Classes = 49681 }
+    @{ Race = 10;  Classes = 49681 }
+    @{ Race = 11;  Classes = 303   }
+    @{ Race = 12;  Classes = 15639 }
+    @{ Race = 128; Classes = 18001 }
+    @{ Race = 130; Classes = 50049 }
+    @{ Race = 330; Classes = 3863  }
+    @{ Race = 522; Classes = 15871 }
+)
+
+# Stable 32-bit hash (deterministic across launches & machines). MD5 is
+# used only as a fixed, well-distributed digest (NOT for security) -- it
+# sidesteps PowerShell 5.1's uint*int -> double overflow trap that an
+# arithmetic FNV hash hits. Picks a race/gender per (character, class) so
+# each character gets a varied-but-fixed, always-valid roster (idempotent).
+function Get-StableHash {
+    param([string]$Text)
+    $md5   = [System.Security.Cryptography.MD5]::Create()
+    try {
+        $bytes = $md5.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Text))
+    } finally {
+        $md5.Dispose()
+    }
+    return [System.BitConverter]::ToUInt32($bytes, 0)
+}
+
+# Races valid for a class, in stable $RaceClasses order.
+function Get-ValidRaces {
+    param([int]$ClassId)
+    $bit = [int](1 -shl ($ClassId - 1))
+    $out = @()
+    foreach ($rc in $RaceClasses) {
+        if (($rc.Classes -band $bit) -ne 0) { $out += $rc.Race }
+    }
+    return $out
+}
 
 # Each button: @{ P=page; B=button; Name='...'; Lines=@('line1', 'line2'...) }.
 # {P} in any line is replaced with the per-character bot-name prefix.
@@ -432,21 +485,27 @@ function Get-BotSocialButtons {
 
     # Page 2 -- Control / Combat. ('spawned' actionable = all my spawned bots.)
     $ctrl = @(
-        @{ Name = 'Attack';     Cmd = '^attack spawned'        }
-        @{ Name = 'Hold';       Cmd = '^hold spawned'          }
-        @{ Name = 'Release';    Cmd = '^release spawned'       }
-        @{ Name = 'Follow Me';  Cmd = '^follow reset spawned'  }
-        @{ Name = 'Guard';      Cmd = '^guard spawned'         }
-        @{ Name = 'Pull';       Cmd = '^pull spawned'          }
-        @{ Name = 'Bal Stance'; Cmd = '^botstance 2 spawned'   }
-        @{ Name = 'Agg Stance'; Cmd = '^botstance 5 spawned'   }
-        @{ Name = 'Taunt On';   Cmd = '^taunt on spawned'      }
-        @{ Name = 'Taunt Off';  Cmd = '^taunt off spawned'     }
-        @{ Name = 'Summon';     Cmd = '^botsummon spawned'     }
-        @{ Name = 'Camp All';   Cmd = '^botcamp spawned'       }
+        # Column-major grid: B1-6 = left column top->bottom, B7-12 = right
+        # column. Order chosen so on/off pairs stack vertically (Hold/Hold
+        # Off, Guard/Guard Off, Taunt On/Off, Bal/Agg). 'Release' (un-
+        # suspend) dropped: orphaned without a Suspend button. 'Summon'
+        # dropped from page 2: redundant, still on page 3.
+        @{ Name = 'Attack';     Cmd   = '^attack spawned'      }
+        @{ Name = 'Hold';       Cmd   = '^hold spawned'        }
+        @{ Name = 'Hold Off';   Cmd   = '^hold clear spawned'  }
+        @{ Name = 'Guard';      Cmd   = '^guard spawned'       }
+        @{ Name = 'Guard Off';  Lines = @('^guard clear spawned', '^follow reset spawned') }
+        @{ Name = 'Follow Me';  Cmd   = '^follow reset spawned' }
+        @{ Name = 'Pull';       Cmd   = '^pull spawned'        }
+        @{ Name = 'Bal Stance'; Cmd   = '^botstance 2 spawned' }
+        @{ Name = 'Agg Stance'; Cmd   = '^botstance 5 spawned' }
+        @{ Name = 'Taunt On';   Cmd   = '^taunt on spawned'    }
+        @{ Name = 'Taunt Off';  Cmd   = '^taunt off spawned'   }
+        @{ Name = 'Camp All';   Cmd   = '^botcamp spawned'     }
     )
     for ($i = 0; $i -lt $ctrl.Count; $i++) {
-        $btns += @{ P = 2; B = ($i + 1); Name = $ctrl[$i].Name; Lines = @($ctrl[$i].Cmd) }
+        $cl = if ($ctrl[$i].Lines) { $ctrl[$i].Lines } else { @($ctrl[$i].Cmd) }
+        $btns += @{ P = 2; B = ($i + 1); Name = $ctrl[$i].Name; Lines = $cl }
     }
 
     # Page 3 -- Group / manage. (Invite/Disband: target a bot first.)
@@ -457,25 +516,42 @@ function Get-BotSocialButtons {
         @{ Name = 'Bot Report';  Cmd = '^botreport spawned'  }
         @{ Name = 'Summon';      Cmd = '^botsummon spawned'  }
         @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
+        @{ Name = 'Camp Bot';    Cmd = '^botcamp target'     }   # logout the single targeted bot
+        @{ Name = 'Delete Bot';  Cmd = '^botdelete confirm'  }   # PERMANENT: deletes the targeted bot (engine 'confirm' satisfied inline)
     )
     for ($i = 0; $i -lt $grp.Count; $i++) {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
     }
 
-    # Pages 4-5 -- per-class create (12 on p4, 3 on p5). {P} -> char prefix.
+    # Pages 4-5 (per-class create) are generated per character in
+    # Set-BotSocials, because the race/gender pick is derived from the
+    # character's own name (deterministic, valid, varied).
+    return $btns
+}
+
+# Per-character create buttons (pages 4-5). Race+gender are a deterministic
+# function of the character name + class: same character always gets the
+# same valid roster (idempotent), different characters differ.
+function Get-CreateButtons {
+    param([string]$Prefix)
+    $btns = @()
     for ($i = 0; $i -lt $BotClasses.Count; $i++) {
-        $c    = $BotClasses[$i]
-        $page = if ($i -lt 12) { 4 } else { 5 }
-        $btn  = if ($i -lt 12) { $i + 1 } else { $i - 11 }
+        $c     = $BotClasses[$i]
+        $name  = "$Prefix$($c.Tag)"
+        $valid = Get-ValidRaces -ClassId $c.Cls
+        $h     = Get-StableHash "$Prefix|$($c.Tag)"
+        $race  = $valid[ [int]($h % [uint64]$valid.Count) ]
+        $gender = [int](($h -shr 8) % 2)   # different hash slice than race
+        $page  = if ($i -lt 12) { 4 } else { 5 }
+        $btn   = if ($i -lt 12) { $i + 1 } else { $i - 11 }
         $btns += @{
             P = $page; B = $btn; Name = ('New ' + $c.Tag.ToUpper())
             Lines = @(
-                ('^botcreate {{P}}{0} {1} {2} 0' -f $c.Tag, $c.Cls, $c.Race)
-                ('^botspawn {{P}}{0}' -f $c.Tag)
+                "^botcreate $name $($c.Cls) $race $gender"
+                "^botspawn $name"
             )
         }
     }
-
     return $btns
 }
 
@@ -507,8 +583,11 @@ function Set-BotSocials {
             if (-not $prefix) { continue }
 
             # Flat key=value map for this character (managed keys only).
+            # Pages 2-3 are {P}-templated; pages 4-5 (create) are computed
+            # for this character's name (race/gender already embedded).
+            $allBtns = @($btns) + @(Get-CreateButtons -Prefix $prefix)
             $managed = [ordered]@{}
-            foreach ($b in $btns) {
+            foreach ($b in $allBtns) {
                 $k = "Page$($b.P)Button$($b.B)"
                 $managed["${k}Name"]  = $b.Name
                 $managed["${k}Color"] = '0'
