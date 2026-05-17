@@ -520,7 +520,7 @@ function Get-BotSocialButtons {
         @{ Name = 'Summon';      Cmd = '^botsummon spawned'  }
         @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
         @{ Name = 'Camp Bot';    Cmd = '^botcamp target'     }   # logout the single targeted bot
-        @{ Name = 'Delete Bot';  Cmd = '^botdelete confirm'  }   # PERMANENT: deletes the targeted bot (engine 'confirm' satisfied inline)
+        @{ Name = 'Delete Bot';  Cmd = '^botdelete'          }   # opens a click-to-confirm popup (engine); no inline 'confirm' so a stray click can't delete
         @{ Name = 'Bot Gear';    Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot
         @{ Name = 'Bot Stats';   Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
     )

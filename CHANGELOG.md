@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.7 — 2026-05-17
+
+**Delete Bot now asks for confirmation.** The page-3 "Delete Bot" button no longer deletes on a single click. It now opens a confirmation pop-up with a clickable "Yes — permanently delete <bot>" link; closing the window cancels. (Requires the matching server update; until that's live, the button safely does nothing harmful — it just prompts you to confirm.)
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Keep the bot targeted when confirming.
+
 ## v1.4.6 — 2026-05-17
 
 **Fix: Socials page 2 bot buttons were blank.** Every single-command page-2 control button (Attack, Hold, Hold Off, Guard, Follow Me, Pull, Bal/Agg Stance, Taunt On/Off, Camp All) was being written with an empty command (just `^`) — they showed up but did nothing. Cause was a launcher bug, not the commands. Fixed; the button commands are correct and now write in full.
