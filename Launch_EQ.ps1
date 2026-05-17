@@ -518,6 +518,8 @@ function Get-BotSocialButtons {
         @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
         @{ Name = 'Camp Bot';    Cmd = '^botcamp target'     }   # logout the single targeted bot
         @{ Name = 'Delete Bot';  Cmd = '^botdelete confirm'  }   # PERMANENT: deletes the targeted bot (engine 'confirm' satisfied inline)
+        @{ Name = 'Bot Gear';    Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot
+        @{ Name = 'Bot Stats';   Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
     )
     for ($i = 0; $i -lt $grp.Count; $i++) {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
