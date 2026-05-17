@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.5 — 2026-05-17
+
+**Two new bot-inspection buttons (Socials page 3).** Added next to the existing group/manage buttons:
+
+- **Bot Gear** — target a bot, click it: a pop-up lists every equipment slot and what the bot is wearing (or "Empty"). Handy for checking what a bot has on and confirming what changed after you trade it gear.
+- **Bot Stats** — target a bot, click it: a pop-up shows the bot's class/race/level, its role, and its full stat readout (attributes, HP/Mana/AC, and the Drill Master damage dial). Useful for seeing how a bot scales as it levels.
+
+Both are read-only. As with all managed buttons, only pages 2-5 are touched and they re-assert every launch.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Open Actions → Socials → page 3; the two new buttons are at the end of the row. Target a bot first, then click.
+
 ## v1.4.4 — 2026-05-16
 
 **Pre-installed bot command buttons (Socials pages 2-5).** Every character now gets a ready-made set of bot Social buttons with zero setup:
