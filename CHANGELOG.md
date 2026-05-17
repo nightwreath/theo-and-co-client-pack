@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.6 — 2026-05-17
+
+**Fix: Socials page 2 bot buttons were blank.** Every single-command page-2 control button (Attack, Hold, Hold Off, Guard, Follow Me, Pull, Bal/Agg Stance, Taunt On/Off, Camp All) was being written with an empty command (just `^`) — they showed up but did nothing. Cause was a launcher bug, not the commands. Fixed; the button commands are correct and now write in full.
+
+**Friend notes:** no action required — the fix applies on next launch (single launch via the starter). The launcher rewrites the managed page 2-5 buttons every launch, so the previously-blank buttons are corrected automatically; nothing to edit by hand. (Page 3-5 buttons were already fine and are unchanged.)
+
 ## v1.4.5 — 2026-05-17
 
 **Two new bot-inspection buttons (Socials page 3).** Added next to the existing group/manage buttons:

@@ -504,7 +504,10 @@ function Get-BotSocialButtons {
         @{ Name = 'Camp All';   Cmd   = '^botcamp spawned'     }
     )
     for ($i = 0; $i -lt $ctrl.Count; $i++) {
-        $cl = if ($ctrl[$i].Lines) { $ctrl[$i].Lines } else { @($ctrl[$i].Cmd) }
+        # Explicit assignment (NOT `$cl = if(){}else{}`): an `if`-expression
+        # unwraps a single-element @(...) into a scalar string, which the
+        # writer then char-indexes -> every single-Cmd button became "^".
+        if ($ctrl[$i].Lines) { $cl = @($ctrl[$i].Lines) } else { $cl = @($ctrl[$i].Cmd) }
         $btns += @{ P = 2; B = ($i + 1); Name = $ctrl[$i].Name; Lines = $cl }
     }
 
@@ -593,8 +596,12 @@ function Set-BotSocials {
                 $k = "Page$($b.P)Button$($b.B)"
                 $managed["${k}Name"]  = $b.Name
                 $managed["${k}Color"] = '0'
-                for ($n = 0; $n -lt $b.Lines.Count; $n++) {
-                    $managed["${k}Line$($n + 1)"] = ($b.Lines[$n] -replace '\{P\}', $prefix)
+                # Coerce to an array: if Lines ever arrives as a scalar string
+                # (single-element-array unwrap), $lines[$n] must still yield
+                # the whole line, not its Nth character.
+                $lines = @($b.Lines)
+                for ($n = 0; $n -lt $lines.Count; $n++) {
+                    $managed["${k}Line$($n + 1)"] = ($lines[$n] -replace '\{P\}', $prefix)
                 }
             }
 
