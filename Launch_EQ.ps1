@@ -521,8 +521,9 @@ function Get-BotSocialButtons {
         @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
         @{ Name = 'Camp Bot';    Cmd = '^botcamp target'     }   # logout the single targeted bot
         @{ Name = 'Delete Bot';  Cmd = '^botdelete'          }   # opens a click-to-confirm popup (engine); no inline 'confirm' so a stray click can't delete
-        @{ Name = 'Bot Gear';    Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot
-        @{ Name = 'Bot Stats';   Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
+        @{ Name = 'Bot Gear';      Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot (overview, no links)
+        @{ Name = 'Bot Stats';     Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
+        @{ Name = 'Bot Gear List'; Cmd = '^inventorylist target' }   # chat: clickable item links (alt+click -> full item details)
     )
     for ($i = 0; $i -lt $grp.Count; $i++) {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }

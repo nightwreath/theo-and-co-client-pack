@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.8 — 2026-05-17
+
+**New page-3 button: "Bot Gear List".** Target a bot and click it to print the bot's equipped gear to chat as **clickable item links** — alt+left-click any to see full item details. (The existing "Bot Gear" button stays as the quick pop-up overview; item links can't render inside a pop-up, only in chat, so this is the companion for inspecting items.)
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Page 3 now has Bot Gear (overview) and Bot Gear List (clickable details).
+
 ## v1.4.7 — 2026-05-17
 
 **Delete Bot now asks for confirmation.** The page-3 "Delete Bot" button no longer deletes on a single click. It now opens a confirmation pop-up with a clickable "Yes — permanently delete <bot>" link; closing the window cancels. (Requires the matching server update; until that's live, the button safely does nothing harmful — it just prompts you to confirm.)
