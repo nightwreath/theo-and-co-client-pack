@@ -524,9 +524,29 @@ function Get-BotSocialButtons {
         @{ Name = 'Bot Gear';      Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot (overview, no links)
         @{ Name = 'Bot Stats';     Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
         @{ Name = 'Bot Gear List'; Cmd = '^inventorylist target' }   # chat: clickable item links (alt+click -> full item details)
+        @{ Name = 'Group Up';      Cmd = '^summongroup'         }   # Phase 3 Group B: spawn (you+5) + group + summon, one click
     )
     for ($i = 0; $i -lt $grp.Count; $i++) {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
+    }
+
+    # Page 6 -- Roles & Formation (Phase 3 Group B). Role is a PER-BOT
+    # attribute (target the bot, then click a role); it persists and re-
+    # derives the bot's stats live. Formation is a GROUP shape (applies to
+    # all spawned bots) honored on both the travel and combat paths.
+    $rf = @(
+        @{ Name = 'Tank';      Cmd = '^role tank target'        }
+        @{ Name = 'Healer';    Cmd = '^role healer target'      }
+        @{ Name = 'DPS';       Cmd = '^role dps target'         }
+        @{ Name = 'CC';        Cmd = '^role cc target'          }
+        @{ Name = 'Support';   Cmd = '^role support target'     }
+        @{ Name = 'Role Reset'; Cmd = '^role reset target'      }   # back to class-derived default
+        @{ Name = 'Compact';   Cmd = '^formation compact spawned' }
+        @{ Name = 'Normal';    Cmd = '^formation normal spawned'  }
+        @{ Name = 'Spread';    Cmd = '^formation spread spawned'  }
+    )
+    for ($i = 0; $i -lt $rf.Count; $i++) {
+        $btns += @{ P = 6; B = ($i + 1); Name = $rf[$i].Name; Lines = @($rf[$i].Cmd) }
     }
 
     # Pages 4-5 (per-class create) are generated per character in
