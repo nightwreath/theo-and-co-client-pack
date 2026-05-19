@@ -524,21 +524,23 @@ function Get-BotSocialButtons {
         @{ Name = 'Bot Gear';      Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot (overview, no links)
         @{ Name = 'Bot Stats';     Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
         @{ Name = 'Bot Gear List'; Cmd = '^inventorylist target' }   # chat: clickable item links (alt+click -> full item details)
-        @{ Name = 'Group Up';      Cmd = '^summongroup'         }   # Phase 3 Group B: spawn (you+5) + group + summon, one click
     )
     for ($i = 0; $i -lt $grp.Count; $i++) {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
     }
 
-    # Page 6 -- Formation (Phase 3 Group B). Formation is a GROUP shape
-    # (applies to all spawned bots) honored on both the travel and combat
-    # paths. NOTE (Alex, S32): the per-bot ROLE buttons were intentionally
-    # NOT shipped to players -- role today only re-skews stats (class
-    # defaults already do the sensible thing), so it added player-facing
-    # complexity with no perceivable payoff. The engine ^role / bot_roles
-    # support stays dormant under the hood for a future Group C (behavior-
-    # by-role) revisit; AI work builds off stances, not roles.
+    # Page 6 -- Bot Group & Formation (Phase 3 Group B). All the new Group B
+    # controls live together on ONE page (Alex, S32): Group Up first (get the
+    # group up + here), then the formation modes (how they space themselves).
+    # Formation is a GROUP shape applied to all spawned bots, honored on both
+    # the travel and combat paths. NOTE (Alex, S32): the per-bot ROLE buttons
+    # were intentionally NOT shipped to players -- role today only re-skews
+    # stats (class defaults already do the sensible thing), so it added
+    # player-facing complexity with no perceivable payoff. The engine ^role /
+    # bot_roles support stays dormant under the hood for a future Group C
+    # (behavior-by-role) revisit; AI work builds off stances, not roles.
     $rf = @(
+        @{ Name = 'Group Up';  Cmd = '^summongroup'              }   # spawn (you+5) + group + summon, one click
         @{ Name = 'Compact';   Cmd = '^formation compact spawned' }
         @{ Name = 'Normal';    Cmd = '^formation normal spawned'  }
         @{ Name = 'Spread';    Cmd = '^formation spread spawned'  }

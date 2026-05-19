@@ -59,6 +59,20 @@ $ManagedFiles = @(
         install_path = 'Zeal.asi'
         source       = Join-Path $RepoRoot 'Zeal.asi'
     }
+    @{
+        # Wayfinder Skyla token-currency NAME (Session 32). The RoF2
+        # client resolves the alternate-currency label from its OWN
+        # dbstr_us.txt by currency id -- AltCurrencyPopulateEntry_Struct
+        # sends only the number, never the name (verified vs
+        # theo-and-co-engine). Custom currency 6 (server sql/056) has no
+        # stock entry, so the merchant window showed "Unknown DB String
+        # 6-18". This file = the friend base dbstr_us.txt + 3 appended
+        # lines (6^17/18/71 = "Skyla Token"/"Skyla Tokens"). EQ root,
+        # sibling of eqgame.exe (like Zeal.asi).
+        name         = 'dbstr_us.txt'
+        install_path = 'dbstr_us.txt'
+        source       = Join-Path $RepoRoot 'dbstr_us.txt'
+    }
     # Classic-zone fidelity (Session 24). These zones run TAKP V2.1c classic
     # geometry; the stock RoF2 _EnvironmentEmitters.txt described the revamped
     # zones (floating torches/fires) and the bundled maps were the revamped

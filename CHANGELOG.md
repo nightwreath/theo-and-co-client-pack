@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.10 — 2026-05-18
+
+**Wayfinder Skyla's token currency now shows its name.** Wayfinder Skyla (the new Plane of Knowledge progression NPC) trades in **Skyla Tokens**, earned from her kill tasks. The alt-currency label is resolved by the client from its own data file, so this release ships that name; without it her merchant window read "Unknown DB String 6-18".
+
+**Friend notes:** no action required — applies on next launch. Skyla's merchant/currency now reads "Skyla Tokens".
+
 ## v1.4.9 — 2026-05-18
 
 **New bot buttons: Formation + Group Up.** Page 3 adds **Group Up** — one click spawns any of your bots that aren't up (you + up to 5), groups them with you, and summons them to you. New **page 6** adds **Compact / Normal / Spread** — sets how your bots space themselves while travelling and fighting (Compact = tight on you for corridors/traps/zone-ins; Spread = wide fan for stack-punishing AE mechanics; Normal = the default offset formation). Requires the matching server update, which is already live.
