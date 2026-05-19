@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.9 — 2026-05-18
+
+**New bot buttons: Formation + Group Up.** Page 3 adds **Group Up** — one click spawns any of your bots that aren't up (you + up to 5), groups them with you, and summons them to you. New **page 6** adds **Compact / Normal / Spread** — sets how your bots space themselves while travelling and fighting (Compact = tight on you for corridors/traps/zone-ins; Spread = wide fan for stack-punishing AE mechanics; Normal = the default offset formation). Requires the matching server update, which is already live.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). New buttons: page 3 "Group Up", and a new page 6 with Compact / Normal / Spread.
+
 ## v1.4.8 — 2026-05-17
 
 **New page-3 button: "Bot Gear List".** Target a bot and click it to print the bot's equipped gear to chat as **clickable item links** — alt+left-click any to see full item details. (The existing "Bot Gear" button stays as the quick pop-up overview; item links can't render inside a pop-up, only in chat, so this is the companion for inspecting items.)
