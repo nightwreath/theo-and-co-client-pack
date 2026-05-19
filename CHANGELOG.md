@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.11 — 2026-05-19
+
+**Fix: bot Social pages now self-clean (duplicate "Group Up" removed).** v1.4.10 moved the **Group Up** button onto page 6 next to Compact / Normal / Spread, but the launcher only ever *added or updated* managed buttons — it never *removed* one that had moved, so the old page-3 Group Up stayed behind and the button showed on both pages. The launcher now treats the bot-managed pages declaratively: any leftover managed-page button that's no longer in the set is cleared on launch. Your page 1 and any of your own socials on other pages are never touched.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). The duplicate Group Up on page 3 disappears on its own; Group Up + Compact / Normal / Spread are together on page 6.
+
 ## v1.4.10 — 2026-05-18
 
 **Wayfinder Skyla's token currency now shows its name.** Wayfinder Skyla (the new Plane of Knowledge progression NPC) trades in **Skyla Tokens**, earned from her kill tasks. The alt-currency label is resolved by the client from its own data file, so this release ships that name; without it her merchant window read "Unknown DB String 6-18".

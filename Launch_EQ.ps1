@@ -653,6 +653,30 @@ function Set-BotSocials {
                 $sec  = $content.Substring($secStart, $secEnd - $secStart)
                 $post = $content.Substring($secEnd)
 
+                # Theo S32 -- PRUNE orphaned managed-page keys. Set-BotSocials
+                # was historically add/update-only: a bot button removed or
+                # moved between releases (e.g. Group Up Page 3 -> Page 6 in
+                # v1.4.10) left its old Page{P}Button* keys in every ini
+                # forever, so the button never actually "moved". Make the
+                # pages WE manage declarative: drop any PageNButton* line on a
+                # managed page whose exact key is no longer in the current
+                # managed set. Managed pages are derived from the button set
+                # (currently 2-6), so Page 1 and any personal pages (7-10) are
+                # never matched. Current managed keys are left in place so the
+                # in-place value replace below stays idempotent; once an ini
+                # is clean there are no orphans left to strip and the file is
+                # stable across launches.
+                $mgPages = @($allBtns | ForEach-Object { $_.P } | Sort-Object -Unique)
+                if ($mgPages.Count -gt 0) {
+                    $pgAlt    = ($mgPages -join '|')
+                    $orphanRx = [regex]("(?m)^(Page(?:$pgAlt)Button\d+(?:Name|Color|Line\d+))=[^\r\n]*\r?\n?")
+                    $keepEval = [System.Text.RegularExpressions.MatchEvaluator]{
+                        param($m)
+                        if ($managed.Contains($m.Groups[1].Value)) { $m.Value } else { '' }
+                    }
+                    $sec = $orphanRx.Replace($sec, $keepEval)
+                }
+
                 $toAppend = @()
                 foreach ($mk in $managed.Keys) {
                     $mv = $managed[$mk]
