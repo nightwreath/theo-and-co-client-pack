@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.12 — 2026-05-19
+
+**Bot controls consolidated on Social page 6.** Page 6 is now the one-stop bot page: **Bot List · Group Up · Summon · Compact · Normal · Spread**. "Group Up" is now `^groupup` — it groups all your spawned bots *in your current zone* into your group (no spawning, no teleporting); if more bots are up than fit (you + 5) it tells you which were left out. (The old Group Up that force-spawned a full 5 was dropped — it couldn't build a sensible composition.) **Summon** now brings the *selected* bot to you — pick one in the group window and click (rarely needed since bots stay near you, but handy). Bot List and Summon were removed from page 3 (they live on page 6 now); page 3 closes the gap on its own.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Requires the matching server update (live). Page 3's old Bot List / Summon entries clear themselves automatically.
+
 ## v1.4.11 — 2026-05-19
 
 **Fix: bot Social pages now self-clean (duplicate "Group Up" removed).** v1.4.10 moved the **Group Up** button onto page 6 next to Compact / Normal / Spread, but the launcher only ever *added or updated* managed buttons — it never *removed* one that had moved, so the old page-3 Group Up stayed behind and the button showed on both pages. The launcher now treats the bot-managed pages declaratively: any leftover managed-page button that's no longer in the set is cleared on launch. Your page 1 and any of your own socials on other pages are never touched.

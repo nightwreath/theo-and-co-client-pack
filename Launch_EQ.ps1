@@ -512,12 +512,14 @@ function Get-BotSocialButtons {
     }
 
     # Page 3 -- Group / manage. (Invite/Disband: target a bot first.)
+    # Bot List + Summon moved to Page 6 (Alex S32) to sit with the group/
+    # formation controls. The loop below renumbers by index so removing them
+    # just shifts the rest up (no gap); v1.4.11's prune clears their old
+    # Page-3 keys on next launch.
     $grp = @(
         @{ Name = 'Invite Bot';  Cmd = '/invite'             }
         @{ Name = 'Disband Bot'; Cmd = '/disband'            }
-        @{ Name = 'Bot List';    Cmd = '^botlist'            }
         @{ Name = 'Bot Report';  Cmd = '^botreport spawned'  }
-        @{ Name = 'Summon';      Cmd = '^botsummon spawned'  }
         @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
         @{ Name = 'Camp Bot';    Cmd = '^botcamp target'     }   # logout the single targeted bot
         @{ Name = 'Delete Bot';  Cmd = '^botdelete'          }   # opens a click-to-confirm popup (engine); no inline 'confirm' so a stray click can't delete
@@ -529,18 +531,29 @@ function Get-BotSocialButtons {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
     }
 
-    # Page 6 -- Bot Group & Formation (Phase 3 Group B). All the new Group B
-    # controls live together on ONE page (Alex, S32): Group Up first (get the
-    # group up + here), then the formation modes (how they space themselves).
-    # Formation is a GROUP shape applied to all spawned bots, honored on both
-    # the travel and combat paths. NOTE (Alex, S32): the per-bot ROLE buttons
-    # were intentionally NOT shipped to players -- role today only re-skews
-    # stats (class defaults already do the sensible thing), so it added
-    # player-facing complexity with no perceivable payoff. The engine ^role /
-    # bot_roles support stays dormant under the hood for a future Group C
-    # (behavior-by-role) revisit; AI work builds off stances, not roles.
+    # Page 6 -- Bots: list / group / formation (Phase 3 Group B). All the
+    # bot group + formation controls live together on ONE page (Alex, S32):
+    #   Bot List  -> your roster
+    #   Group Up  -> ^groupup: group ALL your spawned bots in THIS ZONE with
+    #                you. No spawning, no summoning. If more are up than fit
+    #                (you + 5) it lists the ones left out. Replaces the old
+    #                spawn+group+summon ^summongroup, which was dropped (Alex
+    #                S32) because it couldn't build a proper composition;
+    #                ^summongroup stays dormant in the engine, unreferenced.
+    #   Summon    -> ^botsummon target: yank the SELECTED bot to you (pick a
+    #                bot in the group window, click). Rarely needed (bots are
+    #                normally near you) but handy.
+    #   Compact/Normal/Spread -> formation: a GROUP shape applied to all
+    #                spawned bots, honored on both travel and combat paths.
+    # NOTE (Alex, S32): per-bot ROLE buttons were intentionally NOT shipped
+    # -- role today only re-skews stats (class defaults already do the
+    # sensible thing). The engine ^role / bot_roles support stays dormant
+    # for a future Group C (behavior-by-role); AI builds off stances, not
+    # roles. Smart auto-composition is also a Group C concern.
     $rf = @(
-        @{ Name = 'Group Up';  Cmd = '^summongroup'              }   # spawn (you+5) + group + summon, one click
+        @{ Name = 'Bot List';  Cmd = '^botlist'                 }   # your bot roster
+        @{ Name = 'Group Up';  Cmd = '^groupup'                 }   # group all your spawned bots in this zone w/ you (no spawn/summon)
+        @{ Name = 'Summon';    Cmd = '^botsummon target'         }   # yank the selected/targeted bot to you
         @{ Name = 'Compact';   Cmd = '^formation compact spawned' }
         @{ Name = 'Normal';    Cmd = '^formation normal spawned'  }
         @{ Name = 'Spread';    Cmd = '^formation spread spawned'  }
