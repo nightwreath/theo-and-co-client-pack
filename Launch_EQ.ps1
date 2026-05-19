@@ -530,17 +530,15 @@ function Get-BotSocialButtons {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
     }
 
-    # Page 6 -- Roles & Formation (Phase 3 Group B). Role is a PER-BOT
-    # attribute (target the bot, then click a role); it persists and re-
-    # derives the bot's stats live. Formation is a GROUP shape (applies to
-    # all spawned bots) honored on both the travel and combat paths.
+    # Page 6 -- Formation (Phase 3 Group B). Formation is a GROUP shape
+    # (applies to all spawned bots) honored on both the travel and combat
+    # paths. NOTE (Alex, S32): the per-bot ROLE buttons were intentionally
+    # NOT shipped to players -- role today only re-skews stats (class
+    # defaults already do the sensible thing), so it added player-facing
+    # complexity with no perceivable payoff. The engine ^role / bot_roles
+    # support stays dormant under the hood for a future Group C (behavior-
+    # by-role) revisit; AI work builds off stances, not roles.
     $rf = @(
-        @{ Name = 'Tank';      Cmd = '^role tank target'        }
-        @{ Name = 'Healer';    Cmd = '^role healer target'      }
-        @{ Name = 'DPS';       Cmd = '^role dps target'         }
-        @{ Name = 'CC';        Cmd = '^role cc target'          }
-        @{ Name = 'Support';   Cmd = '^role support target'     }
-        @{ Name = 'Role Reset'; Cmd = '^role reset target'      }   # back to class-derived default
         @{ Name = 'Compact';   Cmd = '^formation compact spawned' }
         @{ Name = 'Normal';    Cmd = '^formation normal spawned'  }
         @{ Name = 'Spread';    Cmd = '^formation spread spawned'  }
