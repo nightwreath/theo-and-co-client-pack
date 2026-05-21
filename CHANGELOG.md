@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.14 — 2026-05-21
+
+**Character-creation loading screen no longer says "Entering The Mines of Gloomingdeep".** With the Tutorial checkbox removed in v1.4.13, the actual destination is your racial starting city as it should be — but the loading-screen string itself was still pulled from a client-side hardcoded reference to the gloomingdeep zone's long_name. This ships a modified `eqstr_us.txt` that renames that long_name to "the world of Norrath", so the loading screen now reads `Entering the world of Norrath...` during character creation. The gloomingdeep zone itself is never visited on this server (tutorial is disabled), so the rename is cosmetic-only in practice.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Existing characters are not affected; only the character-creation loading screen.
+
 ## v1.4.13 — 2026-05-21
 
 **Tutorial checkbox removed from character creation.** The "Tutorial" checkbox at character creation was already a no-op on this server (the server-side rule has been off since launch — the box couldn't actually send you to Gloomingdeep), but the EQ client still showed a misleading "sending you to gloomingdeep" message when it was checked. Removing the checkbox from the character-creation UI altogether prevents the confusion.

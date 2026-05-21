@@ -195,6 +195,22 @@ $ManagedFiles = @(
         install_path = 'UIFiles/default/EQUI_CharacterCreate.xml'
         source       = Join-Path $RepoRoot 'EQUI_CharacterCreate.xml'
     }
+    # Theo-and-Co S38 (v1.4.14): modified eqstr_us.txt with line 3343 --
+    # the long_name for gloomingdeep zone changed from "The Mines of
+    # Gloomingdeep" to "the world of Norrath". The EQ client's
+    # character-creation loading screen renders "Entering %1..." with
+    # the zone long_name; it hardcodes gloomingdeep there regardless of
+    # actual character destination (server routes them to their racial
+    # starting city correctly, but the loading-screen string is
+    # client-side and not race-aware). Gloomingdeep zone is never visited
+    # on this server (tutorial disabled), so the rename is cosmetic-only
+    # in practice. Stock RoF2 file (~7100 lines, 432KB) with only line
+    # 3343 changed.
+    @{
+        name         = 'eqstr_us.txt'
+        install_path = 'eqstr_us.txt'
+        source       = Join-Path $RepoRoot 'eqstr_us.txt'
+    }
 )
 
 # Files to DELETE from the friend's EQ root (relative to it, same base as
