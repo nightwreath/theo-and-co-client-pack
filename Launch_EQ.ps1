@@ -483,25 +483,21 @@ function Get-ValidRaces {
 function Get-BotSocialButtons {
     $btns = @()
 
-    # Page 2 -- Control / Combat. ('spawned' actionable = all my spawned bots.)
+    # ---- Page 2 -- Combat (S39): Pull dropped; Bal/Agg moved to Page 5
+    # (dedicated Stances page); Camp All moved to Page 3 (camp buttons live
+    # together with Camp Bot, not duplicated on Page 2); Attack now 2-line
+    # (clear hold + attack) so a held bot resumes on click. Engine fix #7
+    # (theo-and-co-engine S39 PR #18) silences "no longer holding" chat
+    # when no bots were actually held, so the bundled clear never spams.
     $ctrl = @(
-        # Column-major grid: B1-6 = left column top->bottom, B7-12 = right
-        # column. Order chosen so on/off pairs stack vertically (Hold/Hold
-        # Off, Guard/Guard Off, Taunt On/Off, Bal/Agg). 'Release' (un-
-        # suspend) dropped: orphaned without a Suspend button. 'Summon'
-        # dropped from page 2: redundant, still on page 3.
-        @{ Name = 'Attack';     Cmd   = '^attack spawned'      }
+        @{ Name = 'Attack';     Lines = @('^hold clear spawned', '^attack spawned') }
         @{ Name = 'Hold';       Cmd   = '^hold spawned'        }
         @{ Name = 'Hold Off';   Cmd   = '^hold clear spawned'  }
         @{ Name = 'Guard';      Cmd   = '^guard spawned'       }
         @{ Name = 'Guard Off';  Lines = @('^guard clear spawned', '^follow reset spawned') }
         @{ Name = 'Follow Me';  Cmd   = '^follow reset spawned' }
-        @{ Name = 'Pull';       Cmd   = '^pull spawned'        }
-        @{ Name = 'Bal Stance'; Cmd   = '^botstance 2 spawned' }
-        @{ Name = 'Agg Stance'; Cmd   = '^botstance 5 spawned' }
         @{ Name = 'Taunt On';   Cmd   = '^taunt on spawned'    }
         @{ Name = 'Taunt Off';  Cmd   = '^taunt off spawned'   }
-        @{ Name = 'Camp All';   Cmd   = '^botcamp spawned'     }
     )
     for ($i = 0; $i -lt $ctrl.Count; $i++) {
         # Explicit assignment (NOT `$cl = if(){}else{}`): an `if`-expression
@@ -511,66 +507,74 @@ function Get-BotSocialButtons {
         $btns += @{ P = 2; B = ($i + 1); Name = $ctrl[$i].Name; Lines = $cl }
     }
 
-    # Page 3 -- Group / manage. (Invite/Disband: target a bot first.)
-    # Bot List + Summon moved to Page 6 (Alex S32) to sit with the group/
-    # formation controls. The loop below renumbers by index so removing them
-    # just shifts the rest up (no gap); v1.4.11's prune clears their old
-    # Page-3 keys on next launch.
+    # ---- Page 3 -- Per-bot management + Camp (S39): Delete Bot dropped
+    # (moved to Page 7 next to the per-class Create buttons so the bot-
+    # lifecycle controls live together). Camp All + Camp Bot now adjacent.
     $grp = @(
-        @{ Name = 'Invite Bot';  Cmd = '/invite'             }
-        @{ Name = 'Disband Bot'; Cmd = '/disband'            }
-        @{ Name = 'Bot Report';  Cmd = '^botreport spawned'  }
-        @{ Name = 'Camp All';    Cmd = '^botcamp spawned'    }
-        @{ Name = 'Camp Bot';    Cmd = '^botcamp target'     }   # logout the single targeted bot
-        @{ Name = 'Delete Bot';  Cmd = '^botdelete'          }   # opens a click-to-confirm popup (engine); no inline 'confirm' so a stray click can't delete
-        @{ Name = 'Bot Gear';      Cmd = '^inventorywindow target' }   # pop-up: targeted bot's equipped gear per slot (overview, no links)
-        @{ Name = 'Bot Stats';     Cmd = '^statswindow target'  }   # pop-up: targeted bot's Group A stat-model readout
-        @{ Name = 'Bot Gear List'; Cmd = '^inventorylist target' }   # chat: clickable item links (alt+click -> full item details)
+        @{ Name = 'Invite Bot';    Cmd = '/invite'                  }
+        @{ Name = 'Disband Bot';   Cmd = '/disband'                 }
+        @{ Name = 'Bot Report';    Cmd = '^botreport spawned'       }
+        @{ Name = 'Camp All';      Cmd = '^botcamp spawned'         }
+        @{ Name = 'Camp Bot';      Cmd = '^botcamp target'          }   # logout the single targeted bot
+        @{ Name = 'Bot Gear';      Cmd = '^inventorywindow target'  }   # pop-up: targeted bot's equipped gear per slot
+        @{ Name = 'Bot Stats';     Cmd = '^statswindow target'      }   # pop-up: targeted bot's Group A stat-model readout
+        @{ Name = 'Bot Gear List'; Cmd = '^inventorylist target'    }   # chat: clickable item links (alt+click -> full item details)
     )
     for ($i = 0; $i -lt $grp.Count; $i++) {
         $btns += @{ P = 3; B = ($i + 1); Name = $grp[$i].Name; Lines = @($grp[$i].Cmd) }
     }
 
-    # Page 6 -- Bots: list / group / formation (Phase 3 Group B). All the
-    # bot group + formation controls live together on ONE page (Alex, S32):
-    #   Bot List  -> your roster
-    #   Group Up  -> ^groupup: group ALL your spawned bots in THIS ZONE with
-    #                you. No spawning, no summoning. If more are up than fit
-    #                (you + 5) it lists the ones left out. Replaces the old
-    #                spawn+group+summon ^summongroup, which was dropped (Alex
-    #                S32) because it couldn't build a proper composition;
-    #                ^summongroup stays dormant in the engine, unreferenced.
-    #   Summon    -> ^botsummon target: yank the SELECTED bot to you (pick a
-    #                bot in the group window, click). Rarely needed (bots are
-    #                normally near you) but handy.
-    #   Compact/Normal/Spread -> formation: a GROUP shape applied to all
-    #                spawned bots, honored on both travel and combat paths.
-    # NOTE (Alex, S32): per-bot ROLE buttons were intentionally NOT shipped
-    # -- role today only re-skews stats (class defaults already do the
-    # sensible thing). The engine ^role / bot_roles support stays dormant
-    # for a future Group C (behavior-by-role); AI builds off stances, not
-    # roles. Smart auto-composition is also a Group C concern.
-    $rf = @(
-        @{ Name = 'Bot List';  Cmd = '^botlist'                 }   # your bot roster
-        @{ Name = 'Group Up';  Cmd = '^groupup'                 }   # group all your spawned bots in this zone w/ you (no spawn/summon)
-        @{ Name = 'Summon';    Cmd = '^botsummon target'         }   # yank the selected/targeted bot to you
-        @{ Name = 'Compact';   Cmd = '^formation compact spawned' }
-        @{ Name = 'Normal';    Cmd = '^formation normal spawned'  }
-        @{ Name = 'Spread';    Cmd = '^formation spread spawned'  }
+    # ---- Page 4 -- Group ops + Spell management + Speed (S39): consolidates
+    # the old Page 6 group/formation controls with new spell-management and
+    # movement-speed buttons (engine fixes #4/#5/#6 on PR #18). Spell List
+    # rows now carry [Disable]/[Info] saylinks per spell; Disabled Spells
+    # carries [Enable]. Speed buttons drive the new ^cast movementspeed
+    # group / each sub-target modes.
+    $ops = @(
+        @{ Name = 'Bot List';        Cmd = '^botlist'                     }
+        @{ Name = 'Group Up';        Cmd = '^groupup'                     }
+        @{ Name = 'Summon';          Cmd = '^botsummon target'            }
+        @{ Name = 'Compact';         Cmd = '^formation compact spawned'   }
+        @{ Name = 'Normal';          Cmd = '^formation normal spawned'    }   # formation; distinct from "Balanced" stance on Page 5
+        @{ Name = 'Spread';          Cmd = '^formation spread spawned'    }
+        @{ Name = 'Spell List';      Cmd = '^spells target'               }   # outputs rows w/ [Info]/[Disable] saylinks per spell
+        @{ Name = 'Disabled Spells'; Cmd = '^spellsettings target'        }   # outputs rows w/ [Enable] saylinks per disabled spell
+        @{ Name = 'Group Speed';     Cmd = '^cast movementspeed group spawned' }  # Pack Shrew (DRU/SHM/BST/RNG L34+) / Pack Spirit (DRU 35+) / Selo's (BRD 5+)
+        @{ Name = 'Single Speed';    Cmd = '^cast movementspeed each spawned'  }  # iterates group members; multi-click for full coverage
     )
-    for ($i = 0; $i -lt $rf.Count; $i++) {
-        $btns += @{ P = 6; B = ($i + 1); Name = $rf[$i].Name; Lines = @($rf[$i].Cmd) }
+    for ($i = 0; $i -lt $ops.Count; $i++) {
+        $btns += @{ P = 4; B = ($i + 1); Name = $ops[$i].Name; Lines = @($ops[$i].Cmd) }
     }
 
-    # Pages 4-5 (per-class create) are generated per character in
-    # Set-BotSocials, because the race/gender pick is derived from the
-    # character's own name (deterministic, valid, varied).
+    # ---- Page 5 -- Stances (S39): all 5 valid stances in defensive->
+    # offensive order. Engine fix #1 (PR #18) widened IsTaunting() so
+    # WAR/PAL/SK auto-taunt in every non-Passive stance -- no need for an
+    # "Aggressive Tank" carve-out; the stance picker also picks the right
+    # tank behavior. "Normal" here would clash with the Page 4 formation
+    # button -- we use "Balanced" specifically to keep them distinct.
+    $stances = @(
+        @{ Name = 'Balanced';   Cmd = '^botstance 2 spawned' }
+        @{ Name = 'Aggressive'; Cmd = '^botstance 5 spawned' }
+        @{ Name = 'Assist';     Cmd = '^botstance 6 spawned' }
+        @{ Name = 'AE Burn';    Cmd = '^botstance 9 spawned' }
+        @{ Name = 'Passive';    Cmd = '^botstance 1 spawned' }
+    )
+    for ($i = 0; $i -lt $stances.Count; $i++) {
+        $btns += @{ P = 5; B = ($i + 1); Name = $stances[$i].Name; Lines = @($stances[$i].Cmd) }
+    }
+
+    # Pages 6-7 (per-class create + Delete Bot) are generated per character
+    # in Set-BotSocials via Get-CreateButtons -- race/gender derive from the
+    # character's name (deterministic, valid, varied).
     return $btns
 }
 
-# Per-character create buttons (pages 4-5). Race+gender are a deterministic
+# Per-character create buttons (pages 6-7 as of S39; was 4-5 pre-S39 before
+# Group ops/Stances took those slots). Race+gender are a deterministic
 # function of the character name + class: same character always gets the
-# same valid roster (idempotent), different characters differ.
+# same valid roster (idempotent), different characters differ. Delete Bot
+# also lives on Page 7 (slot 4, after the 3 class buttons) so the bot
+# lifecycle controls (create + delete) sit together.
 function Get-CreateButtons {
     param([string]$Prefix)
     $btns = @()
@@ -581,7 +585,7 @@ function Get-CreateButtons {
         $h     = Get-StableHash "$Prefix|$($c.Tag)"
         $race  = $valid[ [int]($h % [uint64]$valid.Count) ]
         $gender = [int](($h -shr 8) % 2)   # different hash slice than race
-        $page  = if ($i -lt 12) { 4 } else { 5 }
+        $page  = if ($i -lt 12) { 6 } else { 7 }
         $btn   = if ($i -lt 12) { $i + 1 } else { $i - 11 }
         $btns += @{
             P = $page; B = $btn; Name = ('New ' + $c.Tag.ToUpper())
@@ -590,6 +594,14 @@ function Get-CreateButtons {
                 "^botspawn $name"
             )
         }
+    }
+
+    # Delete Bot lives on Page 7 slot 4, immediately after the 3 overflow
+    # class buttons (BST/BER block etc.). Engine opens a click-to-confirm
+    # popup; no inline 'confirm' so a stray click can't delete.
+    $btns += @{
+        P = 7; B = 4; Name = 'Delete Bot'
+        Lines = @('^botdelete')
     }
     return $btns
 }
@@ -674,8 +686,10 @@ function Set-BotSocials {
                 # pages WE manage declarative: drop any PageNButton* line on a
                 # managed page whose exact key is no longer in the current
                 # managed set. Managed pages are derived from the button set
-                # (currently 2-6), so Page 1 and any personal pages (7-10) are
-                # never matched. Current managed keys are left in place so the
+                # (S39: 2-7 -- Stances on Page 5 and Delete Bot on Page 7
+                # extended the range from the pre-S39 2-6), so Page 1 and the
+                # remaining personal pages (8-10) are never matched. Current
+                # managed keys are left in place so the
                 # in-place value replace below stays idempotent; once an ini
                 # is clean there are no orphans left to strip and the file is
                 # stable across launches.

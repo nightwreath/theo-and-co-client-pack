@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4.15 — 2026-05-21
+
+**Bot Social pages reorganized + new buttons (S39).** Pairs with the server-side bot-AI fixes shipping in `theo-and-co-engine` PR #18 (S39). Pages now group by intent so a casual friend can pick up and play out-of-the-gate:
+
+- **Page 2 — Combat controls.** Attack now also clears Hold first (single click resumes a held bot). Pull dropped (rarely used). Bal/Agg moved to the new Stances page.
+- **Page 3 — Per-bot management + Camp.** Camp All and Camp Bot now sit together. Delete Bot moved to Page 7 next to the Create buttons (lifecycle together).
+- **Page 4 — Group ops + Spell management + Speed.** Bot List · Group Up · Summon · Compact · Normal · Spread · **Spell List** · **Disabled Spells** · **Group Speed** · **Single Speed**. Spell List opens a chat list with clickable `[Disable]`/`[Info]` links per spell — click once to silence a spell on the targeted bot. Disabled Spells shows what's silenced with `[Enable]` links. Group Speed casts the best group movement-speed spell (Pack Shrew / Pack Spirit / Selo's-line — engine picks per bot). Single Speed iterates group members one bot/member per click (fallback for compositions without a group-target movement variant).
+- **Page 5 (NEW) — Stances.** All 5 valid stances on one page: **Balanced · Aggressive · Assist · AE Burn · Passive**. Tank classes (Warrior/Paladin/SK) now auto-taunt in any non-Passive stance — no more needing Aggressive specifically (which would disable heals).
+- **Page 6 — Bot Create (classes 1-12).** Moved from old Page 4 to keep "creation" together with the new Page 7.
+- **Page 7 (NEW managed page) — Bot Create overflow + Delete Bot.** The remaining class buttons (Beastlord / etc.) and Delete Bot live here.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Existing characters are repopulated declaratively; any personal buttons on Pages 1 + 8-10 are not touched. Requires the matching server update (deploying alongside this release).
+
 ## v1.4.14 — 2026-05-21
 
 **Character-creation loading screen no longer says "Entering The Mines of Gloomingdeep".** With the Tutorial checkbox removed in v1.4.13, the actual destination is your racial starting city as it should be — but the loading-screen string itself was still pulled from a client-side hardcoded reference to the gloomingdeep zone's long_name. This ships a modified `eqstr_us.txt` that renames that long_name to "the world of Norrath", so the loading screen now reads `Entering the world of Norrath...` during character creation. The gloomingdeep zone itself is never visited on this server (tutorial is disabled), so the rename is cosmetic-only in practice.
