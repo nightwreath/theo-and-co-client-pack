@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.13 — 2026-05-21
+
+**Tutorial checkbox removed from character creation.** The "Tutorial" checkbox at character creation was already a no-op on this server (the server-side rule has been off since launch — the box couldn't actually send you to Gloomingdeep), but the EQ client still showed a misleading "sending you to gloomingdeep" message when it was checked. Removing the checkbox from the character-creation UI altogether prevents the confusion.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). Existing characters are not affected; the change only touches the character-creation screen.
+
 ## v1.4.12 — 2026-05-19
 
 **Bot controls consolidated on Social page 6.** Page 6 is now the one-stop bot page: **Bot List · Group Up · Summon · Compact · Normal · Spread**. "Group Up" is now `^groupup` — it groups all your spawned bots *in your current zone* into your group (no spawning, no teleporting); if more bots are up than fit (you + 5) it tells you which were left out. (The old Group Up that force-spawned a full 5 was dropped — it couldn't build a sensible composition.) **Summon** now brings the *selected* bot to you — pick one in the group window and click (rarely needed since bots stay near you, but handy). Bot List and Summon were removed from page 3 (they live on page 6 now); page 3 closes the gap on its own.

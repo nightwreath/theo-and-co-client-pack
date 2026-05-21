@@ -183,6 +183,18 @@ $ManagedFiles = @(
         install_path = 'highpasshold_sounds.eff'
         source       = Join-Path $RepoRoot 'highpasshold_sounds.eff'
     }
+    # Theo-and-Co S38: modified character-creation UI with the Tutorial
+    # checkbox removed. Server-side rule (World:EnableTutorialButton=false)
+    # already gates the tutorial flow, but the EQ client shows a misleading
+    # "sending you to gloomingdeep" message when the box is checked.
+    # Removing the checkbox from the UI prevents the confusion entirely.
+    # Stock RoF2 file (~3500 lines) with only the Tutorial Button widget +
+    # its <Pieces> reference removed.
+    @{
+        name         = 'EQUI_CharacterCreate.xml'
+        install_path = 'UIFiles/default/EQUI_CharacterCreate.xml'
+        source       = Join-Path $RepoRoot 'EQUI_CharacterCreate.xml'
+    }
 )
 
 # Files to DELETE from the friend's EQ root (relative to it, same base as
