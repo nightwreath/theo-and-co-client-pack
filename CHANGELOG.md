@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.16 — 2026-05-22
+
+**Bot Social button labels are readable again.** With the bot Social pages reorganized in v1.4.15, several buttons have two-word labels (Disband Bot, Camp Bot, Disabled Spells, Spell List, Bot Stats, etc.) that the EQ client wraps to two lines inside the hotbar slot. The *top* line was sitting underneath the slot's keybind-hint overlay ("Ctrl 1", "Alt 1", "Shift 1") — making "Disabled Spells" appear as just "Spells", "Disband Bot" as "Disb...", and so on. This release ships a tweaked `EQUI_HotButtonWnd.xml` that shrinks the slot label font by one tier and shifts it down 10 pixels, so the label now sits clearly *below* the keybind hint instead of fighting it.
+
+**Friend notes:** no action required — applies on next launch. Affects every hotbar / every page / every slot universally (not just bot socials), so any of your own macros with longer text labels also become more readable. The keybind hint itself (top-right of each slot) is unchanged.
+
 ## v1.4.15 — 2026-05-21
 
 **Bot Social pages reorganized + new buttons (S39).** Pairs with the server-side bot-AI fixes shipping in `theo-and-co-engine` PR #18 (S39). Pages now group by intent so a casual friend can pick up and play out-of-the-gate:

@@ -195,6 +195,22 @@ $ManagedFiles = @(
         install_path = 'UIFiles/default/EQUI_CharacterCreate.xml'
         source       = Join-Path $RepoRoot 'EQUI_CharacterCreate.xml'
     }
+    # Theo-and-Co S40 (v1.4.16): hotbar slot label tuning. Two-word bot social
+    # labels (Disband Bot, Camp Bot, Disabled Spells, Spell List, etc.) wrap
+    # to two lines at the default font, and the top line is hidden behind the
+    # engine's keybind-hint overlay (Alt N / Ctrl N / Shift N) at the top of
+    # each slot -- making "Disabled Spells" read as "Spells" alone, etc.
+    # Fix: shrink the macro-label font (Font 1 -> 0) and push the label down
+    # 10px (TextOffsetY 0 -> 10) on all 12 HB_ButtonN slot templates. Empty-
+    # slot text shrinks slightly but stays clearly readable; engine keybind
+    # hint untouched (engine-rendered overlay, not XML-reachable). Universal
+    # across every hotbar (HotButtonWnd1-10), every page, every slot. Stock
+    # RoF2 file (~2050 lines) with edits scoped to the 12 HotButton blocks.
+    @{
+        name         = 'EQUI_HotButtonWnd.xml'
+        install_path = 'UIFiles/default/EQUI_HotButtonWnd.xml'
+        source       = Join-Path $RepoRoot 'EQUI_HotButtonWnd.xml'
+    }
     # Theo-and-Co S38 (v1.4.14): modified eqstr_us.txt with line 3343 --
     # the long_name for gloomingdeep zone changed from "The Mines of
     # Gloomingdeep" to "the world of Norrath". The EQ client's
