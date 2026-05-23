@@ -76,6 +76,16 @@ $ServerToken = 'TheoAndCo'   # the <Char>_<ServerToken>.ini suffix used by this 
 #     they only exist via ini edits, and EQ can silently drop unfamiliar
 #     keys on exit -- the lock is the belt-and-suspenders that survives
 #     ini-rewrites, manual edits, future-version drift, etc.
+#   MouseRightHanded=1  -- defends against a one-way trap (S42 cascade).
+#     The stock "Right-handed mouse" checkbox in Options -> Mouse swaps
+#     LMB/RMB inside EQ when toggled off, after which the user can no
+#     longer click the checkbox to toggle it back on (clicks land on the
+#     wrong button). The state persists to eqclient.ini -> survives
+#     client restart AND Windows reboot. EQUI_OptionsWindow.xml in
+#     v1.4.17 also removes the checkbox from the panel; this lock is the
+#     defense-in-depth so even an out-of-band ini edit can't strand the
+#     player. See memory/project_zeal_rof2_lmb_pan_audit.md for the
+#     incident chronology and the full D1/D2/D3 defense layers.
 #
 # What's deliberately NOT locked:
 #   MouseSensitivity -- EQ persists the slider's position between sessions
@@ -84,8 +94,9 @@ $ServerToken = 'TheoAndCo'   # the <Char>_<ServerToken>.ini suffix used by this 
 #   MouseTurnZoom -- has its own in-game UI toggle (Options -> Mouse),
 #     personal preference, no reason to force a value on the friend.
 $LockedSettings = @{
-    'MaxFPS'          = '60'
-    'MaxMouseLookFPS' = '60'
+    'MaxFPS'           = '60'
+    'MaxMouseLookFPS'  = '60'
+    'MouseRightHanded' = '1'
 }
 
 # --- Updater ------------------------------------------------------------------
@@ -762,7 +773,8 @@ if (Test-Path $IniPath) {
     # so it lands in the same INI section -- EQ's loadOptions reads keys
     # via section-scoped lookups, so just appending at EOF isn't reliable.
     $anchorMap = @{
-        'MaxMouseLookFPS' = 'MaxFPS'   # both live in [Defaults] in EQ's ini
+        'MaxMouseLookFPS'  = 'MaxFPS'             # both live in [Defaults] in EQ's ini
+        'MouseRightHanded' = 'MouseSensitivity'   # both live in [Options]; MouseSensitivity is always present
     }
     $content = Get-Content -Raw $IniPath
     foreach ($key in $LockedSettings.Keys) {

@@ -211,6 +211,23 @@ $ManagedFiles = @(
         install_path = 'UIFiles/default/EQUI_HotButtonWnd.xml'
         source       = Join-Path $RepoRoot 'EQUI_HotButtonWnd.xml'
     }
+    # Theo-and-Co S42 (v1.4.17): modified Options panel with the
+    # "Right-handed mouse" checkbox removed. The stock checkbox is a
+    # one-way trap -- toggling it off swaps LMB/RMB inside EQ, and the
+    # user then can't click the checkbox back on because all clicks land
+    # on the wrong button. The swapped state also persists to
+    # eqclient.ini's MouseRightHanded key, so it survives client restart
+    # and a full Windows reboot. Removing the checkbox from the UI panel
+    # is the primary defense (D2 in the lmb_pan audit doc); Launch_EQ.ps1
+    # also locks MouseRightHanded=1 (D1) as defense-in-depth. Stock RoF2
+    # file (~4500 lines) with the OMP_MouseHandedness Button widget + the
+    # matching <Pieces> reference removed. See
+    # memory/project_zeal_rof2_lmb_pan_audit.md for incident chronology.
+    @{
+        name         = 'EQUI_OptionsWindow.xml'
+        install_path = 'UIFiles/default/EQUI_OptionsWindow.xml'
+        source       = Join-Path $RepoRoot 'EQUI_OptionsWindow.xml'
+    }
     # Theo-and-Co S38 (v1.4.14): modified eqstr_us.txt with line 3343 --
     # the long_name for gloomingdeep zone changed from "The Mines of
     # Gloomingdeep" to "the world of Norrath". The EQ client's

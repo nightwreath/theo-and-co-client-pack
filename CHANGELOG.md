@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.17 — 2026-05-23
+
+**"Right-handed mouse" toggle removed from EQ Options panel + locked on by the launcher.** The stock EQ Options → Mouse panel has a "Right-handed mouse" checkbox that swaps the left and right mouse buttons inside EQ when toggled off — and there's no way out once it's flipped: every click then lands on the wrong button, including the click you'd use to toggle the checkbox back. The state also persists to `eqclient.ini`, so it survives client restart and even a full Windows reboot. The launcher now force-sets `MouseRightHanded=1` in `eqclient.ini` on every launch (defense-in-depth), and `EQUI_OptionsWindow.xml` ships with the checkbox removed from the panel so it can't be triggered in the first place.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). The Options → Mouse panel will no longer show the "Right-handed mouse" checkbox; everything else on the panel is unchanged. If your `eqclient.ini` ever has `MouseRightHanded=0` (it shouldn't), the launcher will repair it on next run.
+
 ## v1.4.16 — 2026-05-22
 
 **Bot Social button labels are readable again.** With the bot Social pages reorganized in v1.4.15, several buttons have two-word labels (Disband Bot, Camp Bot, Disabled Spells, Spell List, Bot Stats, etc.) that the EQ client wraps to two lines inside the hotbar slot. The *top* line was sitting underneath the slot's keybind-hint overlay ("Ctrl 1", "Alt 1", "Shift 1") — making "Disabled Spells" appear as just "Spells", "Disband Bot" as "Disb...", and so on. This release ships a tweaked `EQUI_HotButtonWnd.xml` that shrinks the slot label font by one tier and shifts it down 10 pixels, so the label now sits clearly *below* the keybind hint instead of fighting it.
