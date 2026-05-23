@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.4.19 — 2026-05-23
+
+**Five Zeal camera + cursor fixes — `Zeal.asi` rebuilt with the S44 audit pass.** Most of these you'll only notice if you've hit them before, but together they make the LMB-pan feel a lot more solid in real play:
+
+- **Vertical pan range increased.** The look-up / look-down pan clamp was set conservatively at ±60° while the unit was still being calibrated; bumped to ±90° (full quarter-turn each direction). You can now pan all the way to looking over your character's head or down at the feet without the camera stopping short.
+- **Taskbar icons no longer "zip" to the far left when clicked from windowed EQ.** A click on the Windows taskbar with EQ in the foreground was being interpreted by our pan code as a world-pan start; the cursor warp inside the EQ window then looked like a leftward drag to the taskbar and reordered the icon. Pan engagement is now gated on the cursor being inside the EQ window rect.
+- **F9 / scroll-out / scroll-in mid-pan no longer locks your cursor.** Cycling cameras (F9) or scrolling to 1st-person while LMB-panning used to leave the cursor hidden + clipped to the EQ window until you got back to 3rd-person and pressed RMB. The state machine now ticks across every camera mode, so a mode-switch cleanly releases cursor state and demotes the held angle.
+- **Alt-tab + re-engage no longer breaks the snap-back affordance.** Alt-tabbing away while LMB was held (then clicking back into EQ) used to leave the camera holding its pan-angle without RMB being able to snap it back. The focus-loss path now preserves the HELD state correctly so RMB still snaps you back to vanilla view.
+- **Clicking sliders + UI widgets no longer triggers a pan.** Clicking the LOD Bias slider (Options → Display) or other UI controls used to register as an LMB-pan start; the cursor warp during pan then fought with the slider drag. UI-hit detection was widened to catch slider thumb captures so the click reaches the widget cleanly.
+
+`Zeal.asi` itself is otherwise unchanged from v1.4.17/v1.4.18 (no functional changes outside the camera/cursor path); the underlying Layer-0 injection patch and the H/V mouse sensitivity parity remain the same.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). If you notice anything camera-related that feels off, let Alex know.
+
 ## v1.4.18 — 2026-05-23
 
 **Fix: v1.4.17's modified `EQUI_OptionsWindow.xml` had a malformed comment.** XML 1.0 disallows the `--` (double-hyphen) sequence inside comment bodies, and my v1.4.17 explanatory comment contained one — which caused EQ to throw "Error in your GUI XML files. Check UIErrors.txt." on launch. Rewrote the comment without any double-hyphens; XML parses clean. The functional change from v1.4.17 (Right-handed-mouse checkbox removed + launcher locks MouseRightHanded=1) is unchanged.
