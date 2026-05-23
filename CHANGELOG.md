@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.18 — 2026-05-23
+
+**Fix: v1.4.17's modified `EQUI_OptionsWindow.xml` had a malformed comment.** XML 1.0 disallows the `--` (double-hyphen) sequence inside comment bodies, and my v1.4.17 explanatory comment contained one — which caused EQ to throw "Error in your GUI XML files. Check UIErrors.txt." on launch. Rewrote the comment without any double-hyphens; XML parses clean. The functional change from v1.4.17 (Right-handed-mouse checkbox removed + launcher locks MouseRightHanded=1) is unchanged.
+
+**Friend notes:** no action required — applies on next launch.
+
 ## v1.4.17 — 2026-05-23
 
 **"Right-handed mouse" toggle removed from EQ Options panel + locked on by the launcher.** The stock EQ Options → Mouse panel has a "Right-handed mouse" checkbox that swaps the left and right mouse buttons inside EQ when toggled off — and there's no way out once it's flipped: every click then lands on the wrong button, including the click you'd use to toggle the checkbox back. The state also persists to `eqclient.ini`, so it survives client restart and even a full Windows reboot. The launcher now force-sets `MouseRightHanded=1` in `eqclient.ini` on every launch (defense-in-depth), and `EQUI_OptionsWindow.xml` ships with the checkbox removed from the panel so it can't be triggered in the first place.

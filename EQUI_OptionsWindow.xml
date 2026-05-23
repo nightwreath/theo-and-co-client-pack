@@ -3191,19 +3191,19 @@
 		<TextAlignCenter>false</TextAlignCenter>
 		<TextOffsetX>20</TextOffsetX>
 	</Button>
-	<!-- Mouse Left and Right Handedness removed (theo-and-co v1.4.17): the
+	<!-- Mouse Left and Right Handedness removed (theo-and-co v1.4.18). The
 	     stock "Right-handed mouse" checkbox is a one-way trap. Toggling it
-	     off swaps LMB/RMB internally inside EQ, after which all clicks land
-	     on the wrong button -- including clicks on the checkbox itself, so
-	     a user can't toggle it back on through the UI. EQ persists the
-	     state to eqclient.ini's MouseRightHanded, so the swapped state
-	     also survives client restart and a full Windows reboot. Removing
-	     the checkbox from the panel prevents the trap entirely; Launch_EQ.ps1
-	     also locks MouseRightHanded=1 on every launch as defense-in-depth.
-	     Original Button widget removed; matching <Pieces>OMP_MouseHandedness
-	     </Pieces> reference also removed from this file's Screen pieces
-	     list. See memory/project_zeal_rof2_lmb_pan_audit.md for the S42
-	     incident that surfaced this. -->
+	     off swaps LMB and RMB internally inside EQ; after the toggle, every
+	     click lands on the wrong button (including the click that would
+	     toggle the checkbox back on), so the user cannot recover through
+	     the UI. EQ persists the state to eqclient.ini.MouseRightHanded, so
+	     the swapped state also survives client restart and a full Windows
+	     reboot. Removing the checkbox from the panel prevents the trap
+	     entirely; Launch_EQ.ps1 also locks MouseRightHanded=1 on every
+	     launch as defense-in-depth. The original Button widget is removed
+	     here, and the matching Pieces reference (OMP_MouseHandedness) is
+	     removed below in this file's Screen pieces list. See
+	     memory/project_zeal_rof2_lmb_pan_audit.md for the S42 incident. -->
 	<!-- Mouse sensitivity -->
 	<Label item="OMP_MouseSensitivityLabel">
 		<ScreenID>OMP_MouseSensitivityLabel</ScreenID>
