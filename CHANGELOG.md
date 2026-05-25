@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.21 — 2026-05-25
+
+**Bot-create race picker: Drakkin removed; per-character race overrides added.**
+
+A Drakkin (race 522) bot was created on the live server even though Drakkin is Serpent's Spine 2006 content and shouldn't exist on a PoP-era server. Two-part fix:
+
+- Server-side `sql/107` removes race 522 from `bot_create_combinations` so the engine's `IsValidRaceClassCombo` rejects any `^botcreate` with race=522.
+- Launcher-side here: race 522 removed from the `$RaceClasses` table used by the per-class Create buttons. The picker can no longer hand out a Drakkin and trip the new engine rejection — buttons stay functional after the server-side block lands.
+
+New `$RaceOverrides` hash near the top of `Launch_EQ.ps1` lets a specific (character, class) pair pin to a specific race, bypassing the hash picker. First entry: `Theolin|brd = 7` (Half-Elf Bard, by request). Other characters keep their hash-picked race from the remaining 15 PoP-era allowed races.
+
 ## v1.4.20 — 2026-05-25
 
 **Classic / Luclin visual toggles, picked inline from the launcher — character look and weapon look independently, per friend.** Some players prefer the classic pre-Luclin character models; some prefer the modern Luclin look; lots of EQ players liked the Luclin characters but the post-Luclin "rainbow particle" weapons less so. This release lets each friend pick each axis themselves, right from the launcher window before the game starts.

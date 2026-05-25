@@ -639,8 +639,22 @@ $RaceClasses = @(
     @{ Race = 128; Classes = 18001 }
     @{ Race = 130; Classes = 50049 }
     @{ Race = 330; Classes = 3863  }
-    @{ Race = 522; Classes = 15871 }
+    # Race 522 (Drakkin) intentionally REMOVED: Serpent's Spine 2006,
+    # post-PoP. Server-side sql/107 also blocks Drakkin in
+    # bot_create_combinations so any ^botcreate with race=522 is
+    # engine-rejected. This list stays in sync with that block --
+    # picker can never hand out a Drakkin and trip the rejection.
 )
+
+# Per-(character, class) race overrides. Keys are "$Prefix|$Tag" exactly
+# as Get-StableHash sees them. Values are race IDs from $RaceClasses
+# above. Used by Get-CreateButtons to bypass the hash picker for
+# specific characters who've asked for a specific race for a specific
+# class. Race must still be valid for that class (no validation here --
+# pick from the list yourself).
+$RaceOverrides = @{
+    'Theolin|brd' = 7   # Half-Elf Bard (Alex S40 request)
+}
 
 # Stable 32-bit hash (deterministic across launches & machines). MD5 is
 # used only as a fixed, well-distributed digest (NOT for security) -- it
@@ -774,7 +788,16 @@ function Get-CreateButtons {
         $name  = "$Prefix$($c.Tag)"
         $valid = Get-ValidRaces -ClassId $c.Cls
         $h     = Get-StableHash "$Prefix|$($c.Tag)"
-        $race  = $valid[ [int]($h % [uint64]$valid.Count) ]
+        # Per-(character, class) race override takes precedence over the
+        # hash picker. See $RaceOverrides above. Falls through to the
+        # hash if no override is set for this combo.
+        $oKey = "$Prefix|$($c.Tag)"
+        if ($RaceOverrides.ContainsKey($oKey)) {
+            $race = $RaceOverrides[$oKey]
+        }
+        else {
+            $race = $valid[ [int]($h % [uint64]$valid.Count) ]
+        }
         $gender = [int](($h -shr 8) % 2)   # different hash slice than race
         $page  = if ($i -lt 12) { 6 } else { 7 }
         $btn   = if ($i -lt 12) { $i + 1 } else { $i - 11 }
