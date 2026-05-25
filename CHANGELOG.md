@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.4.20 — 2026-05-25
+
+**Classic / Luclin visual toggles, picked inline from the launcher — character look and weapon look independently, per friend.** Some players prefer the classic pre-Luclin character models; some prefer the modern Luclin look; lots of EQ players liked the Luclin characters but the post-Luclin "rainbow particle" weapons less so. This release lets each friend pick each axis themselves, right from the launcher window before the game starts.
+
+How it works:
+
+1. Double-click your normal "EQ - Theo and Co" desktop shortcut (or `Play_EQ.bat`) as usual.
+2. After the version-check messages, the launcher shows your current model state and waits:
+   ```
+   [Launcher] Current models:
+              Characters: LUCLIN   Weapons: LUCLIN
+     [C] Toggle character models
+     [W] Toggle weapon models
+     [Enter or any other key] Launch EverQuest
+   ```
+3. Press `C` to flip character models between Luclin and Classic; press `W` to flip weapon models between Luclin and Classic. After each flip the launcher re-shows the updated state — flip both, flip the same one twice, whatever you want.
+4. Press Enter (or any non-C/W key) to launch the game with your current choices. If you don't want to change anything, hit Enter immediately and you're in-game in the usual amount of time.
+
+Notes on each axis:
+
+- **Characters** — Vah Shir always render in Luclin (no classic equivalent exists). All other races have a pre-Luclin model and swap cleanly.
+- **Weapons** — a handful of late-era / particle weapons may render as plain placeholders in Classic mode because they have no pre-Luclin equivalent. Small number of items, mostly raid-tier.
+
+It's entirely client-side and per-friend. Nobody else's view changes; the server has no idea which look you're using. You can flip back and forth as often as you want.
+
+If you'd previously moved `equipment-01.eqg` yourself (a common manual classic-weapons swap), the launcher detects that on first run and treats it as your existing pref — you won't lose your setup.
+
+**Friend notes:** no action required — applies on next launch (single launch via the starter). The launcher's new menu replaces the old "Press any key to launch" prompt; pressing Enter immediately gets you to the game the same as before.
+
 ## v1.4.19 — 2026-05-23
 
 **Five Zeal camera + cursor fixes — `Zeal.asi` rebuilt with the S44 audit pass.** Most of these you'll only notice if you've hit them before, but together they make the LMB-pan feel a lot more solid in real play:

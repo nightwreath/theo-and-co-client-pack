@@ -63,7 +63,13 @@ $EQRoot      = Split-Path $PSScriptRoot -Parent           # parent of "Theo and 
 $IniPath     = Join-Path $EQRoot 'eqclient.ini'
 $VersionFile = Join-Path $PSScriptRoot 'theo_and_co.version'
 $UpdaterLog  = Join-Path $PSScriptRoot 'theo_and_co_updater.log'
+$PrefsFile   = Join-Path $PSScriptRoot 'theo_and_co_prefs.json'   # local, NOT managed by the updater
 $ServerToken = 'TheoAndCo'   # the <Char>_<ServerToken>.ini suffix used by this server's client
+
+# Model-style swap: stash dir for assets temporarily disabled by Classic mode.
+# Lives inside $EQRoot so Test-PathInsideRoot is happy; never auto-deleted by
+# the updater (not on its managed-files list).
+$ClassicStashDir = Join-Path $EQRoot '_theo_classic_assets_disabled'
 
 # Settings re-stamped into eqclient.ini before every EQ launch. The key
 # must already exist in eqclient.ini under whatever section. To turn off
@@ -97,6 +103,180 @@ $LockedSettings = @{
     'MaxFPS'           = '60'
     'MaxMouseLookFPS'  = '60'
     'MouseRightHanded' = '1'
+}
+
+# --- Model style prefs --------------------------------------------------------
+# Per-friend pick of CLASSIC vs LUCLIN, independently for character models
+# and weapon models. Local-only state (not in $ManagedFiles, not updated by
+# the patcher); a separate Toggle_Character_Models.ps1 / Toggle_Weapon_Models.ps1
+# pair flips the values, and this launcher applies them every launch.
+#
+# Characters: pure eqclient.ini -- AllLuclinPcModelsOff (master switch;
+#   Vah Shir always loads regardless) + LoadLuclinCharacters (older naming;
+#   set in lockstep for belt+suspenders).
+# Weapons: file presence -- $EQRoot\equipment-01.eqg moved in/out of
+#   $ClassicStashDir. The underlying classic weapon models are already in
+#   any RoF2 install via gequip*.s3d; removing equipment-01.eqg lets the
+#   client fall back to them. One known quirk: weapon model 10409 has no
+#   classic equivalent (EQEmu forum, 2018) -- will render as a placeholder
+#   in CLASSIC mode.
+
+function Read-ModelStylePrefs {
+    # Returns @{ character_style='luclin'|'classic'; weapon_style=... },
+    # writing the prefs file with detected defaults if it's missing.
+    $result = [ordered]@{ character_style = $null; weapon_style = $null }
+    if (Test-Path -LiteralPath $PrefsFile) {
+        try {
+            $obj = Get-Content -Raw -LiteralPath $PrefsFile -ErrorAction Stop | ConvertFrom-Json
+            if ($obj.character_style -in @('luclin','classic')) { $result.character_style = $obj.character_style }
+            if ($obj.weapon_style    -in @('luclin','classic')) { $result.weapon_style    = $obj.weapon_style    }
+        } catch {
+            Write-UpdaterLog "Model style prefs parse failed: $($_.Exception.Message). Re-detecting."
+        }
+    }
+    $detected = $false
+    if (-not $result.character_style) {
+        $allOff = $null
+        if (Test-Path -LiteralPath $IniPath) {
+            $iniContent = Get-Content -Raw -LiteralPath $IniPath -ErrorAction SilentlyContinue
+            if ($iniContent -and ($iniContent -match '(?m)^AllLuclinPcModelsOff=(\d+)')) { $allOff = $Matches[1] }
+        }
+        $result.character_style = if ($allOff -eq '1') { 'classic' } else { 'luclin' }
+        $detected = $true
+    }
+    if (-not $result.weapon_style) {
+        $equipFile = Join-Path $EQRoot 'equipment-01.eqg'
+        $result.weapon_style = if (Test-Path -LiteralPath $equipFile) { 'luclin' } else { 'classic' }
+        $detected = $true
+    }
+    if ($detected) {
+        try { Save-ModelStylePrefs -Prefs $result } catch {
+            Write-UpdaterLog "Model style prefs write FAILED on first-run: $($_.Exception.Message)"
+        }
+        Write-UpdaterLog "Model style prefs detected: characters=$($result.character_style), weapons=$($result.weapon_style)"
+    }
+    return $result
+}
+
+function Save-ModelStylePrefs {
+    param($Prefs)
+    $obj  = [ordered]@{
+        character_style = $Prefs.character_style
+        weapon_style    = $Prefs.weapon_style
+    }
+    $json = $obj | ConvertTo-Json -Depth 3
+    # UTF-8 WITHOUT BOM. Same pattern as build-release.ps1's manifest write
+    # -- PowerShell 5.1's Set-Content -Encoding UTF8 writes a BOM that JSON
+    # consumers can silently mishandle.
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($PrefsFile, $json, $utf8NoBom)
+}
+
+function Show-ModelStyleMenu {
+    # Interactive menu shown after the update check, before launch. Lets the
+    # friend flip CHARACTER or WEAPON models inline -- one key per axis,
+    # re-shows current state after each flip, exits + launches on any other
+    # key. Replaces the older "Press any key to launch" prompt: this prompt
+    # IS the keypress gate; pressing Enter (or any non-C/W key) launches.
+    # Prefs are saved on each toggle so a launcher crash between menu and
+    # game-start still persists the choice.
+    param([Parameter(Mandatory)][ref]$PrefsRef)
+
+    while ($true) {
+        $char = $PrefsRef.Value.character_style.ToUpper()
+        $weap = $PrefsRef.Value.weapon_style.ToUpper()
+
+        Write-Host ""
+        Write-Host "[Launcher] Current models:" -ForegroundColor Green
+        Write-Host ("           Characters: " + $char.PadRight(8) + " Weapons: " + $weap) -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  [C] Toggle character models"
+        Write-Host "  [W] Toggle weapon models"
+        Write-Host "  [Enter or any other key] Launch EverQuest"
+        Write-Host ""
+
+        try {
+            $key = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        } catch {
+            # Non-interactive host (redirected stdin, etc.) -- just launch.
+            Start-Sleep -Seconds 1
+            return
+        }
+
+        $c = if ($key.Character) { $key.Character.ToString().ToLower() } else { '' }
+        if ($c -eq 'c') {
+            $old = $PrefsRef.Value.character_style
+            $new = if ($old -eq 'luclin') { 'classic' } else { 'luclin' }
+            $PrefsRef.Value.character_style = $new
+            try {
+                Save-ModelStylePrefs -Prefs $PrefsRef.Value
+                Write-UpdaterLog "Menu toggle: characters $old -> $new"
+            } catch {
+                Write-Host "[Launcher] Could not save prefs: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-UpdaterLog "Menu toggle save FAILED (characters $old -> $new): $($_.Exception.Message)"
+            }
+            Write-Host ("[Launcher] Character models: " + $old.ToUpper() + " -> " + $new.ToUpper()) -ForegroundColor Cyan
+            continue
+        }
+        if ($c -eq 'w') {
+            $old = $PrefsRef.Value.weapon_style
+            $new = if ($old -eq 'luclin') { 'classic' } else { 'luclin' }
+            $PrefsRef.Value.weapon_style = $new
+            try {
+                Save-ModelStylePrefs -Prefs $PrefsRef.Value
+                Write-UpdaterLog "Menu toggle: weapons $old -> $new"
+            } catch {
+                Write-Host "[Launcher] Could not save prefs: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-UpdaterLog "Menu toggle save FAILED (weapons $old -> $new): $($_.Exception.Message)"
+            }
+            Write-Host ("[Launcher] Weapon models: " + $old.ToUpper() + " -> " + $new.ToUpper()) -ForegroundColor Cyan
+            continue
+        }
+        return
+    }
+}
+
+function Apply-WeaponStyleFileMove {
+    # Idempotent: every launch ensures equipment-01.eqg is in the right
+    # place for the current weapon_style pref. Mid-game guarded (EQ memory-
+    # maps eqg files; locked while running). Called BEFORE Start-Process
+    # eqgame.exe so by the time EQ opens its handles, the file is settled.
+    param([string]$Style)
+    $rootFile  = Join-Path $EQRoot   'equipment-01.eqg'
+    $stashFile = Join-Path $ClassicStashDir 'equipment-01.eqg'
+
+    if ($Style -eq 'classic') {
+        if (Test-Path -LiteralPath $rootFile) {
+            try {
+                if (-not (Test-Path -LiteralPath $ClassicStashDir)) {
+                    New-Item -ItemType Directory -Path $ClassicStashDir -Force -ErrorAction Stop | Out-Null
+                }
+                Move-Item -LiteralPath $rootFile -Destination $stashFile -Force -ErrorAction Stop
+                Write-Host "[Launcher]   Stashed equipment-01.eqg (weapons: CLASSIC)" -ForegroundColor Cyan
+                Write-UpdaterLog "Weapon style classic: stashed equipment-01.eqg."
+            } catch {
+                Write-Host "[Launcher]   Could not stash equipment-01.eqg: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-UpdaterLog "Weapon style apply FAILED (classic): $($_.Exception.Message)"
+            }
+        }
+        # If neither root nor stash has it, log once and continue. Friend can
+        # still play; weapons just render however the engine falls back to.
+        elseif (-not (Test-Path -LiteralPath $stashFile)) {
+            Write-UpdaterLog "Weapon style classic: equipment-01.eqg not found in root or stash; no file action."
+        }
+    } else {
+        # 'luclin' (or any other value treated as luclin -- default)
+        if (Test-Path -LiteralPath $stashFile) {
+            try {
+                Move-Item -LiteralPath $stashFile -Destination $rootFile -Force -ErrorAction Stop
+                Write-Host "[Launcher]   Restored equipment-01.eqg (weapons: LUCLIN)" -ForegroundColor Cyan
+                Write-UpdaterLog "Weapon style luclin: restored equipment-01.eqg from stash."
+            } catch {
+                Write-Host "[Launcher]   Could not restore equipment-01.eqg: $($_.Exception.Message)" -ForegroundColor Yellow
+                Write-UpdaterLog "Weapon style apply FAILED (luclin): $($_.Exception.Message)"
+            }
+        }
+    }
 }
 
 # --- Updater ------------------------------------------------------------------
@@ -757,7 +937,24 @@ function Set-BotSocials {
 
 Resolve-PendingUpdates
 Update-ClientPack
-Wait-ForKeyPress
+
+# Load (or first-run-detect) the model-style prefs, then show the inline
+# menu. The menu IS the keypress-to-launch gate -- it replaces the older
+# Wait-ForKeyPress. Toggles persist to disk inside the loop; any non-C/W
+# key (incl. Enter) exits the menu and the rest of the launch continues.
+$ModelStylePrefs = Read-ModelStylePrefs
+Show-ModelStyleMenu -PrefsRef ([ref]$ModelStylePrefs)
+
+# Apply the (possibly-just-toggled) character side via $LockedSettings so
+# it goes through the same ini-stamp loop as everything else. The weapon
+# side is a file move and runs after the stamp.
+if ($ModelStylePrefs.character_style -eq 'classic') {
+    $LockedSettings['AllLuclinPcModelsOff'] = '1'
+    $LockedSettings['LoadLuclinCharacters'] = 'FALSE'
+} else {
+    $LockedSettings['AllLuclinPcModelsOff'] = '0'
+    $LockedSettings['LoadLuclinCharacters'] = 'TRUE'
+}
 
 # Apply $LockedSettings to eqclient.ini BEFORE launching EQ. The pre-v1.0.6
 # launcher applied these after EQ exited, which required the launcher to
@@ -773,8 +970,10 @@ if (Test-Path $IniPath) {
     # so it lands in the same INI section -- EQ's loadOptions reads keys
     # via section-scoped lookups, so just appending at EOF isn't reliable.
     $anchorMap = @{
-        'MaxMouseLookFPS'  = 'MaxFPS'             # both live in [Defaults] in EQ's ini
-        'MouseRightHanded' = 'MouseSensitivity'   # both live in [Options]; MouseSensitivity is always present
+        'MaxMouseLookFPS'      = 'MaxFPS'             # both live in [Defaults] in EQ's ini
+        'MouseRightHanded'     = 'MouseSensitivity'   # both live in [Options]; MouseSensitivity is always present
+        'AllLuclinPcModelsOff' = 'MaxFPS'             # [Defaults]; MaxFPS is the only key we KNOW exists section-wise
+        'LoadLuclinCharacters' = 'MaxFPS'             # [Defaults]
     }
     $content = Get-Content -Raw $IniPath
     foreach ($key in $LockedSettings.Keys) {
@@ -807,6 +1006,12 @@ if (Test-Path $IniPath) {
 # per-character templated). Done before launch so the client reads them at
 # char-select; never blocks launch.
 Set-BotSocials
+
+# Apply the weapon-style file move (independent of the ini stamp). Runs
+# before Start-Process so the swap is settled before EQ memory-maps any
+# .eqg files. Idempotent: a no-op if equipment-01.eqg is already in the
+# correct location for the current weapon_style pref.
+Apply-WeaponStyleFileMove -Style $ModelStylePrefs.weapon_style
 
 Write-Host "[Launcher] Launching EverQuest..."
 Start-Process -FilePath (Join-Path $EQRoot 'eqgame.exe') `

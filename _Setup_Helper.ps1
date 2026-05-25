@@ -20,4 +20,5 @@ Write-Host "Desktop shortcut created:" -ForegroundColor Green
 Write-Host "  $linkPath" -ForegroundColor Green
 Write-Host ""
 Write-Host "Double-click that shortcut on your desktop anytime to play." -ForegroundColor Green
+Write-Host "(The launcher will offer to swap character / weapon models inline before launch.)" -ForegroundColor Green
 Write-Host ""
