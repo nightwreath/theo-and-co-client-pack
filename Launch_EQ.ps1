@@ -695,14 +695,16 @@ function Get-BotSocialButtons {
     # (theo-and-co-engine S39 PR #18) silences "no longer holding" chat
     # when no bots were actually held, so the bundled clear never spams.
     $ctrl = @(
-        @{ Name = 'Attack';     Lines = @('^hold clear spawned', '^attack spawned') }
-        @{ Name = 'Hold';       Cmd   = '^hold spawned'        }
-        @{ Name = 'Hold Off';   Cmd   = '^hold clear spawned'  }
-        @{ Name = 'Guard';      Cmd   = '^guard spawned'       }
-        @{ Name = 'Guard Off';  Lines = @('^guard clear spawned', '^follow reset spawned') }
-        @{ Name = 'Follow Me';  Cmd   = '^follow reset spawned' }
-        @{ Name = 'Taunt On';   Cmd   = '^taunt on spawned'    }
-        @{ Name = 'Taunt Off';  Cmd   = '^taunt off spawned'   }
+        @{ Name = 'Attack';        Lines = @('^hold clear spawned', '^attack spawned') }
+        @{ Name = 'Hold';          Cmd   = '^hold spawned'        }
+        @{ Name = 'Hold Off';      Cmd   = '^hold clear spawned'  }
+        @{ Name = 'Guard';         Cmd   = '^guard spawned'       }
+        @{ Name = 'Guard Off';     Lines = @('^guard clear spawned', '^follow reset spawned') }
+        @{ Name = 'Follow Me';     Cmd   = '^follow reset spawned' }
+        @{ Name = 'Taunt On';      Cmd   = '^taunt on spawned'    }
+        @{ Name = 'Taunt Off';     Cmd   = '^taunt off spawned'   }
+        @{ Name = 'Casters Back';  Cmd   = '^botstopmeleelevel 1 spawned'     }   # S53: caster bots never melee (stop-melee-level = 1; effective at any level)
+        @{ Name = 'Default Roles'; Cmd   = '^botstopmeleelevel reset spawned' }   # S53: restore server default L13 (Bots:CasterStopMeleeLevel rule). Sub-L13 casters melee, L13+ stand back and cast.
     )
     for ($i = 0; $i -lt $ctrl.Count; $i++) {
         # Explicit assignment (NOT `$cl = if(){}else{}`): an `if`-expression
@@ -738,7 +740,8 @@ function Get-BotSocialButtons {
     $ops = @(
         @{ Name = 'Bot List';        Cmd = '^botlist'                     }
         @{ Name = 'Group Up';        Cmd = '^groupup'                     }
-        @{ Name = 'Summon';          Cmd = '^botsummon target'            }
+        @{ Name = 'Summon';          Cmd = '^botsummon target'            }   # targeted bot only
+        @{ Name = 'Summon All';      Cmd = '^botsummon all'               }   # S53: summons every spawned bot to player. `all` and `spawned` are aliases on ^botsummon (bot_command.h:735-737 shared switch branch + ABM_Spawned_All combined mask).
         @{ Name = 'Compact';         Cmd = '^formation compact spawned'   }
         @{ Name = 'Normal';          Cmd = '^formation normal spawned'    }   # formation; distinct from "Balanced" stance on Page 5
         @{ Name = 'Spread';          Cmd = '^formation spread spawned'    }

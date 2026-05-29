@@ -1,5 +1,38 @@
 # Changelog
 
+## v1.4.22 — 2026-05-29
+
+**Three new bot social buttons: a 'Summon All' button on Page 4 and a 'Casters Back' + 'Default Roles' pair on Page 2.**
+
+- **Page 4 slot 4 — Summon All** (`^botsummon all`): summons every bot you have spawned to your location in one click. Sits right below the existing per-target **Summon** button (which still summons only the targeted bot). The two summon buttons are now adjacent so it's quick to pick the right one.
+
+- **Page 2 slots 9 & 10 — Casters Back + Default Roles**: paired control for whether caster/healer/spell-fighter bots run into melee. The engine has a per-bot "stop melee level" setting (server rule default L13), below which caster bots melee and at/above which they stand back and cast. Low-level groups see every bot charge in; this pair gives you one-click control to override that:
+  - **Casters Back** (`^botstopmeleelevel 1 spawned`) — locks all spawned casters out of melee at any level. Useful at low levels when your Cleric/Wizard keeps running into the fight instead of healing/nuking.
+  - **Default Roles** (`^botstopmeleelevel reset spawned`) — restores the L13 server default. Sub-L13 casters melee briefly, L13+ casters stand back and cast.
+
+Page 4 layout post-change (slots 5–11 shifted down by 1 to make room for Summon All):
+
+```
+1  Bot List       7  Spread
+2  Group Up       8  Spell List
+3  Summon         9  Disabled Spells
+4  Summon All    10  Group Speed
+5  Compact       11  Single Speed
+6  Normal
+```
+
+Page 2 layout post-change (no shifts; Casters Back + Default Roles appended at slots 9 & 10):
+
+```
+1  Attack          6  Follow Me
+2  Hold            7  Taunt On
+3  Hold Off        8  Taunt Off
+4  Guard           9  Casters Back
+5  Guard Off      10  Default Roles
+```
+
+No other changes this release. Existing button hotkey bindings on Page 2 stay valid; Page 4 buttons that shifted (Compact through Single Speed) move down one slot — re-pin hotkey-bound buttons on Page 4 if affected.
+
 ## v1.4.21 — 2026-05-25
 
 **Bot-create race picker: Drakkin removed; per-character race overrides added.**
