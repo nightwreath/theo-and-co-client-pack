@@ -703,6 +703,7 @@ function Get-BotSocialButtons {
         @{ Name = 'Follow Me';     Cmd   = '^follow reset spawned' }
         @{ Name = 'Taunt On';      Cmd   = '^taunt on spawned'    }
         @{ Name = 'Taunt Off';     Cmd   = '^taunt off spawned'   }
+        @{ Name = 'Casters In';    Cmd   = '^botstopmeleelevel 100 spawned'   }   # S55: force casters into melee/belly range (stop-melee-level 100 > any bot level => melee branch, bot.cpp:2369/3247) so they CAN cast on CastingFromRangeImmunity mobs (Sol B fire giants, Naggy). Pairs with Casters Back; reset via Default Roles.
         @{ Name = 'Casters Back';  Cmd   = '^botstopmeleelevel 1 spawned'     }   # S53: caster bots never melee (stop-melee-level = 1; effective at any level)
         @{ Name = 'Default Roles'; Cmd   = '^botstopmeleelevel reset spawned' }   # S53: restore server default L13 (Bots:CasterStopMeleeLevel rule). Sub-L13 casters melee, L13+ stand back and cast.
     )
@@ -754,7 +755,7 @@ function Get-BotSocialButtons {
         $btns += @{ P = 4; B = ($i + 1); Name = $ops[$i].Name; Lines = @($ops[$i].Cmd) }
     }
 
-    # ---- Page 5 -- Stances (S39): all 5 valid stances in defensive->
+    # ---- Page 5 -- Stances (S39) + nuke resist toggles (S55): the 5 valid stances in defensive->
     # offensive order. Engine fix #1 (PR #18) widened IsTaunting() so
     # WAR/PAL/SK auto-taunt in every non-Passive stance -- no need for an
     # "Aggressive Tank" carve-out; the stance picker also picks the right
@@ -766,6 +767,13 @@ function Get-BotSocialButtons {
         @{ Name = 'Assist';     Cmd = '^botstance 6 spawned' }
         @{ Name = 'AE Burn';    Cmd = '^botstance 9 spawned' }
         @{ Name = 'Passive';    Cmd = '^botstance 1 spawned' }
+        # S55: nuke resist-ceiling toggles, appended after the stances (Alex's placement).
+        # Class-agnostic by construction -- DoResistCheck (bot.cpp:11015-11038) reads each
+        # spell's OWN resist type, so one button steers every caster to a landing element
+        # (e.g. on Naggy FR/MR 340-425 are skipped, CR 70 cold lands). Value 100 is a
+        # starting ceiling -- tune in-game with `^spellresistlimits nuke <value> spawned`.
+        @{ Name = 'Smart Nukes'; Cmd = '^spellresistlimits nuke 100 spawned' }   # skip nukes whose effective target resist > 100; bot falls through to a lower-resist element
+        @{ Name = 'Any Nuke';    Cmd = '^spellresistlimits nuke 0 spawned' }      # 0 = disable the gate (cast regardless of resist) -- the reset for Smart Nukes
     )
     for ($i = 0; $i -lt $stances.Count; $i++) {
         $btns += @{ P = 5; B = ($i + 1); Name = $stances[$i].Name; Lines = @($stances[$i].Cmd) }

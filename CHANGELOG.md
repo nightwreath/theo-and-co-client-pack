@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.4.23 — 2026-06-01
+
+**Three more bot-control social buttons: a 'Casters In' button on Page 2 (the inverse of Casters Back), plus a 'Smart Nukes' / 'Any Nuke' pair on Page 5.**
+
+- **Page 2 — Casters In** (`^botstopmeleelevel 100 spawned`): the counterpart to **Casters Back**. Forces your caster bots to run *into* melee range so they can cast on mobs that are immune to ranged spells. Classic EverQuest "belly casting" mobs — the Solusek's Eye / Nagafen's Lair fire giants and Lord Nagafen himself — resist 100% of spells unless the caster is right up against them, so stock caster bots (which stand back) do nothing on those fights. Click **Casters In** before pulling; click **Default Roles** (or **Casters Back**) to send casters back to range afterward.
+- **Page 5 — Smart Nukes** (`^spellresistlimits nuke 100 spawned`): makes caster bots skip nukes the target heavily resists and fall through to an element that lands — e.g. on Nagafen (high fire/magic resist, low cold resist) they automatically switch to cold instead of wasting casts on fire. Works for every caster class (each bot checks its own spell's element vs the target's matching resist).
+- **Page 5 — Any Nuke** (`^spellresistlimits nuke 0 spawned`): turns the Smart Nukes resist filter back off (cast regardless of resist). The reset for Smart Nukes.
+
+**Friend notes:** no action required — applies on next launch (pages 2 and 5 re-assert automatically). The Smart Nukes ceiling (100) is a starting value; if a fight feels off you can tune it live with `^spellresistlimits nuke <value> spawned`.
+
 ## v1.4.22 — 2026-05-29
 
 **Three new bot social buttons: a 'Summon All' button on Page 4 and a 'Casters Back' + 'Default Roles' pair on Page 2.**
