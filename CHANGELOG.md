@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.25 — 2026-06-01
+
+**New stance button: Vanguard (Page 5).** A one-button group burn that *keeps your healers healing* — the stance the other buttons couldn't give you.
+
+- **Page 5 — Vanguard** (`^botstance 10 spawned`): sets every spawned bot to the new **Vanguard** stance. Casters and melee go all-out like **Aggressive**, but healers keep healing on **Balanced** thresholds instead of holding their big heals. Use it when you want max DPS on a fight your single cleric still has to sustain (e.g. Nagafen) — no more choosing between "burn" and "the cleric actually heals," and no need to bring a second healer just to enable a burn.
+- Sits right after **Aggressive** on Page 5. The existing stance buttons (Balanced / Aggressive / Assist / AE Burn / Passive) and the Smart Nukes / Any Nuke toggles are unchanged.
+
+**Requires the matching server update** (engine PR #34), deployed alongside this release.
+
+**Friend notes:** no action required — applies on next launch (Page 5 re-asserts automatically). If the Vanguard button ever says "incorrect argument," the server hasn't picked up the engine update yet — just try again shortly.
+
 ## v1.4.24 — 2026-06-01
 
 **Fix: the v1.4.23 'Smart Nukes' / 'Any Nuke' buttons errored — wrong spell-type name.** They sent `^spellresistlimits nuke …`, but the engine's spell-type shortname is `nukes` (plural). Corrected to `^spellresistlimits nukes 100 spawned` (Smart Nukes) and `^spellresistlimits nukes 0 spawned` (Any Nuke). **Casters In** (Page 2) was unaffected.

@@ -755,7 +755,7 @@ function Get-BotSocialButtons {
         $btns += @{ P = 4; B = ($i + 1); Name = $ops[$i].Name; Lines = @($ops[$i].Cmd) }
     }
 
-    # ---- Page 5 -- Stances (S39) + nuke resist toggles (S55): the 5 valid stances in defensive->
+    # ---- Page 5 -- Stances (S39) + nuke resist toggles (S55): the 6 valid stances in defensive->
     # offensive order. Engine fix #1 (PR #18) widened IsTaunting() so
     # WAR/PAL/SK auto-taunt in every non-Passive stance -- no need for an
     # "Aggressive Tank" carve-out; the stance picker also picks the right
@@ -764,6 +764,7 @@ function Get-BotSocialButtons {
     $stances = @(
         @{ Name = 'Balanced';   Cmd = '^botstance 2 spawned' }
         @{ Name = 'Aggressive'; Cmd = '^botstance 5 spawned' }
+        @{ Name = 'Vanguard';   Cmd = '^botstance 10 spawned' }  # S55 (engine PR #34): Aggressive offense, but healers keep healing on Balanced thresholds -- one-button group burn for a single-cleric group
         @{ Name = 'Assist';     Cmd = '^botstance 6 spawned' }
         @{ Name = 'AE Burn';    Cmd = '^botstance 9 spawned' }
         @{ Name = 'Passive';    Cmd = '^botstance 1 spawned' }
