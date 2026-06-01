@@ -771,9 +771,9 @@ function Get-BotSocialButtons {
         # Class-agnostic by construction -- DoResistCheck (bot.cpp:11015-11038) reads each
         # spell's OWN resist type, so one button steers every caster to a landing element
         # (e.g. on Naggy FR/MR 340-425 are skipped, CR 70 cold lands). Value 100 is a
-        # starting ceiling -- tune in-game with `^spellresistlimits nuke <value> spawned`.
-        @{ Name = 'Smart Nukes'; Cmd = '^spellresistlimits nuke 100 spawned' }   # skip nukes whose effective target resist > 100; bot falls through to a lower-resist element
-        @{ Name = 'Any Nuke';    Cmd = '^spellresistlimits nuke 0 spawned' }      # 0 = disable the gate (cast regardless of resist) -- the reset for Smart Nukes
+        # starting ceiling -- tune in-game with `^spellresistlimits nukes <value> spawned`.
+        @{ Name = 'Smart Nukes'; Cmd = '^spellresistlimits nukes 100 spawned' }   # skip nukes whose effective target resist > 100; bot falls through to a lower-resist element
+        @{ Name = 'Any Nuke';    Cmd = '^spellresistlimits nukes 0 spawned' }      # 0 = disable the gate (cast regardless of resist) -- the reset for Smart Nukes
     )
     for ($i = 0; $i -lt $stances.Count; $i++) {
         $btns += @{ P = 5; B = ($i + 1); Name = $stances[$i].Name; Lines = @($stances[$i].Cmd) }

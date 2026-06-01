@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.24 — 2026-06-01
+
+**Fix: the v1.4.23 'Smart Nukes' / 'Any Nuke' buttons errored — wrong spell-type name.** They sent `^spellresistlimits nuke …`, but the engine's spell-type shortname is `nukes` (plural). Corrected to `^spellresistlimits nukes 100 spawned` (Smart Nukes) and `^spellresistlimits nukes 0 spawned` (Any Nuke). **Casters In** (Page 2) was unaffected.
+
+**Friend notes:** no action required — applies on next launch.
+
 ## v1.4.23 — 2026-06-01
 
 **Three more bot-control social buttons: a 'Casters In' button on Page 2 (the inverse of Casters Back), plus a 'Smart Nukes' / 'Any Nuke' pair on Page 5.**
