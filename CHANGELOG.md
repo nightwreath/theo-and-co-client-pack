@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.26 — 2026-06-06
+
+**Hide your own overhead name.** A new in-game command hides the floating name above your *own* character — other players' and NPCs' names are unchanged. A modern-MMO comfort option for a cleaner view of your own character.
+
+- Type **`/hidename`** to toggle your own name off/on. `/hidename on` and `/hidename off` set it explicitly. The choice persists between sessions.
+- Type **`/zeal`** any time to see the available commands.
+
+**Friend notes:** no action required — applies on next launch. Your name shows by default; use `/hidename` whenever you want it hidden.
+
 ## v1.4.25 — 2026-06-01
 
 **New stance button: Vanguard (Page 5).** A one-button group burn that *keeps your healers healing* — the stance the other buttons couldn't give you.
