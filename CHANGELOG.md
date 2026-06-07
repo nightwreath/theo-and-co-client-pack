@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.4.27 — 2026-06-06
+
+**New: widen your field of view with `/fov`.** A wider FOV shows more of the world around you and makes the third-person view feel less zoomed-in.
+
+- Type **`/fov 65`** (any value 45–90) to widen the view. **`/fov off`** (or `/fov 45`) returns to the game default. Persists between sessions.
+- Overhead names stay correctly positioned over heads at any FOV, and the camera distance is unchanged (no zoom).
+- Note: at a wider FOV everything on screen is a bit smaller (that's just what a wider view does) — mob names still appear within EQ's normal range, just smaller.
+
+**Friend notes:** no action required — applies on next launch. The default view is unchanged until you opt in with `/fov`.
+
 ## v1.4.26 — 2026-06-06
 
 **Hide your own overhead name.** A new in-game command hides the floating name above your *own* character — other players' and NPCs' names are unchanged. A modern-MMO comfort option for a cleaner view of your own character.
