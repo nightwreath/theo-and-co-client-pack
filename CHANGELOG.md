@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.4.28 — 2026-06-19
+
+**New: turn any bot spell into a one-click button.** Open a bot's spell list, click **[Add Button]** next to any spell, and it creates a ready-made Social button that makes that bot cast that exact spell — no more reopening the spell list every fight.
+
+- In a bot's **Spell List** (the Page 4 button, or `^spells <target>`), every spell now has a clickable **[Add Button]** link. Click it and a button labeled like **"DRU Spirit of Wolf"** appears on **Socials Page 8** — drag it onto any hotbar.
+- That hotbar button force-casts the spell on your current target — e.g. real **Spirit of Wolf** instead of whatever the generic speed command picks. Perfect for the buffs and utility you cast over and over (SoW, invis, on-demand heals).
+
+**Requires the matching server update** (engine PR #37), already live.
+
+**Friend notes:** no action required — applies on next launch. If you clicked **[Add Button]** in the past and nothing happened, *this* is the release that makes it work.
+
 ## v1.4.27 — 2026-06-06
 
 **New: widen your field of view with `/fov`.** A wider FOV shows more of the world around you and makes the third-person view feel less zoomed-in.
