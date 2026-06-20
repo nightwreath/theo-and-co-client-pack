@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.29 — 2026-06-20
+
+**Fixed: clicking to target now works with `/fov` on.** Previously, with a widened field of view you had to be almost on top of a mob to left-click it — the click landed where the world *would* be at the default FOV, not where things actually appeared on screen. Now click-targeting lines up at any FOV.
+
+- With `/fov` widened, left-clicking a mob — even off to the side or at range — targets it correctly again.
+- The view itself is unchanged; only the click alignment was fixed.
+
+**Friend notes:** no action required — applies on next launch. If you'd stopped using `/fov` because targeting felt broken, it works now.
+
 ## v1.4.28 — 2026-06-19
 
 **New: turn any bot spell into a one-click button.** Open a bot's spell list, click **[Add Button]** next to any spell, and it creates a ready-made Social button that makes that bot cast that exact spell — no more reopening the spell list every fight.
